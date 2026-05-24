@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ohok_flutter/features/analysis/presentation/check_symptoms_screen.dart';
+import 'package:ohok_flutter/features/articles/presentation/articles_screen.dart';
 import 'package:ohok_flutter/features/history/presentation/history_screen.dart';
 import 'package:ohok_flutter/features/home/presentation/home_screen.dart';
 import 'package:ohok_flutter/features/onboarding/presentation/onboarding_screen.dart';
@@ -32,8 +32,7 @@ GoRouter buildRouter() {
           builder: (context, state) => const HospitalsScreen()),
       GoRoute(
           path: '/articles',
-          builder: (context, state) => const Scaffold(
-              body: Center(child: Text('Articles and News')))),
+          builder: (context, state) => const ArticlesScreen()),
     ],
   );
 }
