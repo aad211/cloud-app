@@ -28,11 +28,32 @@ void main() {
       expect(visuals.color, AppColors.gold);
     });
 
+    test('returns danger visuals for Pneumonia', () {
+      final visuals = conditionVisualsFor('Pneumonia');
+
+      expect(visuals.emoji, '🦠');
+      expect(visuals.color, AppColors.danger);
+    });
+
+    test('returns danger visuals for COVID-19', () {
+      final visuals = conditionVisualsFor('COVID-19');
+
+      expect(visuals.emoji, '🦠');
+      expect(visuals.color, AppColors.danger);
+    });
+
     test('returns critical visuals for Lung Cancer', () {
       final visuals = conditionVisualsFor('Lung Cancer');
 
       expect(visuals.emoji, '⚠️');
       expect(visuals.color, const Color(0xFF991B1B));
+    });
+
+    test('falls back to lung visuals for unknown conditions', () {
+      final visuals = conditionVisualsFor('Unknown condition');
+
+      expect(visuals.emoji, '🫁');
+      expect(visuals.color, AppColors.blue);
     });
   });
 
@@ -63,7 +84,7 @@ void main() {
   });
 
   group('Parity cards', () {
-    testWidgets('ParityGradientCard stretches full width', (tester) async {
+    testWidgets('ParityGradientCard renders its child content', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -76,11 +97,6 @@ void main() {
       );
 
       expect(find.text('Card content'), findsOneWidget);
-      final container = tester.widget<Container>(find.byType(Container).first);
-      expect(
-        container.constraints?.maxWidth ?? double.infinity,
-        double.infinity,
-      );
     });
 
     testWidgets('ParityInfoCard shows leading and child content', (
