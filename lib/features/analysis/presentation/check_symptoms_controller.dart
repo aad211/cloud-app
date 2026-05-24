@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ohok_flutter/features/analysis/data/mock_analysis_repository.dart';
@@ -42,18 +44,42 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
       : _repository = const MockAnalysisRepository(),
         super(const CheckSymptomsState());
 
+  static const _missingRecordingError = '⚠️ Please record your cough first';
+
   final Ref ref;
   final MockAnalysisRepository _repository;
+  Timer? _recordingTimer;
+  Timer? _errorTimer;
 
-  Future<void> startMockRecording() async {
-    state = state.copyWith(isRecording: true, recordingTime: 0, errorMessage: '');
-    for (var second = 1; second <= 10; second++) {
-      await Future<void>.delayed(const Duration(seconds: 1));
-      if (!mounted) return;
-      state = state.copyWith(recordingTime: second);
+  void toggleMockRecording() {
+    _clearMissingRecordingError();
+
+    if (state.isRecording) {
+      _completeRecording();
+      return;
     }
-    if (!mounted) return;
-    state = state.copyWith(isRecording: false, recordingTime: 0, hasRecording: true);
+
+    _recordingTimer?.cancel();
+    state = state.copyWith(
+      isRecording: true,
+      recordingTime: 0,
+      errorMessage: '',
+    );
+
+    _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      final nextSecond = state.recordingTime + 1;
+      if (nextSecond >= 10) {
+        _completeRecording();
+        return;
+      }
+
+      state = state.copyWith(recordingTime: nextSecond);
+    });
   }
 
   Future<bool> analyze() async {
@@ -61,10 +87,11 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
       return false;
     }
     if (!state.hasRecording) {
-      state = state.copyWith(errorMessage: 'Please record your cough first');
+      _showMissingRecordingError();
       return false;
     }
 
+    _clearMissingRecordingError();
     state = state.copyWith(errorMessage: '', buttonState: AnalysisButtonState.loading);
     await Future<void>.delayed(const Duration(milliseconds: 2500));
     if (!mounted) return false;
@@ -90,6 +117,41 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
     if (!mounted) return false;
     state = state.copyWith(buttonState: AnalysisButtonState.success);
     return true;
+  }
+
+  void _completeRecording() {
+    _recordingTimer?.cancel();
+    _recordingTimer = null;
+    if (!mounted) return;
+    state = state.copyWith(
+      isRecording: false,
+      recordingTime: 0,
+      hasRecording: true,
+    );
+  }
+
+  void _showMissingRecordingError() {
+    _errorTimer?.cancel();
+    state = state.copyWith(errorMessage: _missingRecordingError);
+    _errorTimer = Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      state = state.copyWith(errorMessage: '');
+    });
+  }
+
+  void _clearMissingRecordingError() {
+    _errorTimer?.cancel();
+    _errorTimer = null;
+    if (state.errorMessage == _missingRecordingError) {
+      state = state.copyWith(errorMessage: '');
+    }
+  }
+
+  @override
+  void dispose() {
+    _recordingTimer?.cancel();
+    _errorTimer?.cancel();
+    super.dispose();
   }
 }
 
