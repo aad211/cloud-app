@@ -34,22 +34,29 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   DateTime get _now => widget.now ?? DateTime.now();
 
+  bool _isWithinPastDays(AnalysisRecord record, int days) {
+    final cutoff = _now.subtract(Duration(days: days));
+    return !record.date.isAfter(_now) && record.date.isAfter(cutoff);
+  }
+
   List<AnalysisRecord> _filter(List<AnalysisRecord> records) {
     return switch (_period) {
       _HistoryPeriod.all => records,
       _HistoryPeriod.sevenDays => records
-          .where((r) => _now.difference(r.date).inDays < 7)
+          .where((r) => _isWithinPastDays(r, 7))
           .toList(),
       _HistoryPeriod.thirtyDays => records
-          .where((r) => _now.difference(r.date).inDays < 30)
+          .where((r) => _isWithinPastDays(r, 30))
           .toList(),
     };
   }
 
   /// Returns an ordered list of (dateLabel, records) pairs.
   List<(String, List<AnalysisRecord>)> _group(List<AnalysisRecord> records) {
+    final ordered = [...records]
+      ..sort((a, b) => b.date.compareTo(a.date));
     final groups = <String, List<AnalysisRecord>>{};
-    for (final record in records) {
+    for (final record in ordered) {
       final key = _dateFmt.format(record.date);
       (groups[key] ??= []).add(record);
     }
@@ -82,7 +89,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             child: historyAsync.when(
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
-              error: (_, __) => const _EmptyState(),
+              error: (_, __) => const _ErrorState(),
               data: (records) {
                 final filtered = _filter(records);
                 if (filtered.isEmpty) return const _EmptyState();
@@ -226,6 +233,24 @@ class _EmptyState extends StatelessWidget {
     return const Center(
       child: Text(
         'No History Yet',
+        style: TextStyle(
+          color: AppColors.navy,
+          fontSize: 18,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Text(
+        'Unable to load history',
         style: TextStyle(
           color: AppColors.navy,
           fontSize: 18,

@@ -41,6 +41,19 @@ void main() {
       expect(find.text('Last 7 Days'), findsOneWidget);
       expect(find.text('Last 30 Days'), findsOneWidget);
     });
+
+    testWidgets('shows a distinct error state when history fails to load',
+        (tester) async {
+      final storage = FakeLocalStorageService()
+        ..historyLoadException = Exception('load failed');
+
+      await tester.pumpWidget(_buildHistory(storage: storage));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Unable to load history'), findsOneWidget);
+      expect(find.text('No History Yet'), findsNothing);
+    });
   });
 
   group('HistoryScreen – with records', () {
@@ -162,6 +175,32 @@ void main() {
       expect(find.text('June 15, 2025'), findsOneWidget);
       expect(find.text('June 16, 2025'), findsOneWidget);
     });
+
+    testWidgets('renders date groups newest first even when input is unsorted',
+        (tester) async {
+      final storage = storageWith([
+        AnalysisRecord(
+          id: 'older',
+          date: DateTime(2025, 6, 15, 9, 0),
+          condition: 'Asthma',
+          percentage: 87,
+        ),
+        AnalysisRecord(
+          id: 'newer',
+          date: DateTime(2025, 6, 16, 10, 0),
+          condition: 'Bronchitis',
+          percentage: 65,
+        ),
+      ]);
+
+      await tester.pumpWidget(_buildHistory(storage: storage));
+      await tester.pump();
+
+      final newerHeading = tester.getTopLeft(find.text('June 16, 2025'));
+      final olderHeading = tester.getTopLeft(find.text('June 15, 2025'));
+
+      expect(newerHeading.dy, lessThan(olderHeading.dy));
+    });
   });
 
   group('HistoryScreen – period filters', () {
@@ -215,6 +254,33 @@ void main() {
       expect(find.text('Asthma'), findsOneWidget);
       expect(find.text('Bronchitis'), findsNothing);
       expect(find.text('COPD'), findsNothing);
+    });
+
+    testWidgets('Last 7 Days excludes future-dated records', (tester) async {
+      final futureStorage = FakeLocalStorageService()
+        ..history = [
+          AnalysisRecord(
+            id: 'recent',
+            date: DateTime(2025, 6, 17, 10, 0),
+            condition: 'Asthma',
+            percentage: 80,
+          ).toJson(),
+          AnalysisRecord(
+            id: 'future',
+            date: DateTime(2025, 6, 22, 9, 0),
+            condition: 'Future Condition',
+            percentage: 90,
+          ).toJson(),
+        ];
+
+      await tester.pumpWidget(_buildHistory(storage: futureStorage, now: now));
+      await tester.pump();
+
+      await tester.tap(find.text('Last 7 Days'));
+      await tester.pump();
+
+      expect(find.text('Asthma'), findsOneWidget);
+      expect(find.text('Future Condition'), findsNothing);
     });
 
     testWidgets('Last 30 Days shows records within 30 days', (tester) async {

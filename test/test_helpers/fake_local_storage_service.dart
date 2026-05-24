@@ -11,6 +11,7 @@ class FakeLocalStorageService implements LocalStorageService {
   int setHasCompletedOnboardingCallCount = 0;
   Exception? historySaveException;
   Duration historyLoadDelay = Duration.zero;
+  Exception? historyLoadException;
 
   @override
   Future<bool> getHasCompletedOnboarding() async => hasCompletedOnboarding;
@@ -32,6 +33,7 @@ class FakeLocalStorageService implements LocalStorageService {
     if (historyLoadDelay > Duration.zero) {
       await Future<void>.delayed(historyLoadDelay);
     }
+    if (historyLoadException != null) throw historyLoadException!;
     return history;
   }
 
