@@ -162,4 +162,18 @@ void main() {
 
     expect(find.text('Simple Audio Recording'), findsOneWidget);
   });
+
+  testWidgets('does not allow swiping between onboarding slides',
+      (tester) async {
+    final storage = FakeLocalStorageService();
+
+    await tester.pumpWidget(_buildHarness(storage));
+    await tester.pumpAndSettle();
+
+    await tester.fling(find.byType(PageView), const Offset(-400, 0), 1000);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Welcome to CLOUD'), findsOneWidget);
+    expect(find.text('Simple Audio Recording'), findsNothing);
+  });
 }
