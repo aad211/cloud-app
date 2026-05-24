@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ohok_flutter/app/router/app_router.dart';
 import 'package:ohok_flutter/core/models/analysis_record.dart';
 import 'package:ohok_flutter/core/storage/local_storage_service.dart';
 import 'package:ohok_flutter/features/home/presentation/home_screen.dart';
@@ -15,6 +14,45 @@ Widget _buildHome({required FakeLocalStorageService storage}) {
       localStorageServiceProvider.overrideWithValue(storage),
     ],
     child: const MaterialApp(home: HomeScreen()),
+  );
+}
+
+Widget _buildHomeRouter({required FakeLocalStorageService storage}) {
+  final router = GoRouter(
+    initialLocation: '/home',
+    routes: [
+      GoRoute(
+        path: '/home',
+        builder: (_, __) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/check-symptoms',
+        builder: (_, __) =>
+            const Scaffold(body: Center(child: Text('Check Symptoms Page'))),
+      ),
+      GoRoute(
+        path: '/history',
+        builder: (_, __) =>
+            const Scaffold(body: Center(child: Text('History Page'))),
+      ),
+      GoRoute(
+        path: '/hospitals',
+        builder: (_, __) =>
+            const Scaffold(body: Center(child: Text('Hospitals Page'))),
+      ),
+      GoRoute(
+        path: '/articles',
+        builder: (_, __) =>
+            const Scaffold(body: Center(child: Text('Articles Page'))),
+      ),
+    ],
+  );
+
+  return ProviderScope(
+    overrides: [
+      localStorageServiceProvider.overrideWithValue(storage),
+    ],
+    child: MaterialApp.router(routerConfig: router),
   );
 }
 
@@ -96,39 +134,53 @@ void main() {
     });
   });
 
-  group('AppRouter – placeholder routes present', () {
-    test('router has /check-symptoms route', () {
-      final router = buildRouter();
-      final routes = router.configuration.routes;
-      final paths = _collectPaths(routes);
-      expect(paths, contains('/check-symptoms'));
+  group('HomeScreen quick actions', () {
+    testWidgets('navigates to Check Symptoms from the primary CTA',
+        (tester) async {
+      await tester.pumpWidget(_buildHomeRouter(storage: FakeLocalStorageService()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Check Symptoms'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Check Symptoms Page'), findsOneWidget);
+      expect(find.byType(HomeScreen), findsNothing);
     });
 
-    test('router has /history route', () {
-      final router = buildRouter();
-      final paths = _collectPaths(router.configuration.routes);
-      expect(paths, contains('/history'));
+    testWidgets('navigates to History from the secondary action',
+        (tester) async {
+      await tester.pumpWidget(_buildHomeRouter(storage: FakeLocalStorageService()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('History'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('History Page'), findsOneWidget);
+      expect(find.byType(HomeScreen), findsNothing);
     });
 
-    test('router has /hospitals route', () {
-      final router = buildRouter();
-      final paths = _collectPaths(router.configuration.routes);
-      expect(paths, contains('/hospitals'));
+    testWidgets('navigates to Hospitals from the secondary action',
+        (tester) async {
+      await tester.pumpWidget(_buildHomeRouter(storage: FakeLocalStorageService()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Hospitals'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hospitals Page'), findsOneWidget);
+      expect(find.byType(HomeScreen), findsNothing);
     });
 
-    test('router has /articles route', () {
-      final router = buildRouter();
-      final paths = _collectPaths(router.configuration.routes);
-      expect(paths, contains('/articles'));
+    testWidgets('navigates to Articles from the secondary action',
+        (tester) async {
+      await tester.pumpWidget(_buildHomeRouter(storage: FakeLocalStorageService()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Articles'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Articles Page'), findsOneWidget);
+      expect(find.byType(HomeScreen), findsNothing);
     });
   });
-}
-
-List<String> _collectPaths(List<RouteBase> routes) {
-  final result = <String>[];
-  for (final r in routes) {
-    if (r is GoRoute) result.add(r.path);
-    result.addAll(_collectPaths(r.routes));
-  }
-  return result;
 }

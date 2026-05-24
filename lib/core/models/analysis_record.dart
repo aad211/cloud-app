@@ -18,10 +18,38 @@ class AnalysisRecord {
         'percentage': percentage,
       };
 
-  factory AnalysisRecord.fromJson(Map<String, dynamic> json) => AnalysisRecord(
-        id: json['id'] as String,
-        date: DateTime.parse(json['date'] as String),
-        condition: json['condition'] as String,
-        percentage: json['percentage'] as int,
+  factory AnalysisRecord.fromJson(Map<String, dynamic> json) {
+    final id = json['id'];
+    final dateRaw = json['date'];
+    final condition = json['condition'];
+    final percentage = json['percentage'];
+
+    if (id is! String || id.isEmpty) {
+      throw const FormatException('Analysis record is missing a valid id.');
+    }
+    if (dateRaw is! String) {
+      throw const FormatException('Analysis record is missing a valid date.');
+    }
+    final date = DateTime.tryParse(dateRaw);
+    if (date == null) {
+      throw const FormatException('Analysis record has an invalid date.');
+    }
+    if (condition is! String || condition.isEmpty) {
+      throw const FormatException(
+        'Analysis record is missing a valid condition.',
       );
+    }
+    if (percentage is! int) {
+      throw const FormatException(
+        'Analysis record is missing a valid percentage.',
+      );
+    }
+
+    return AnalysisRecord(
+      id: id,
+      date: date,
+      condition: condition,
+      percentage: percentage,
+    );
+  }
 }
