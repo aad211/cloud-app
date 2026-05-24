@@ -7,6 +7,14 @@ import 'package:ohok_flutter/features/onboarding/presentation/onboarding_screen.
 
 import '../test_helpers/fake_local_storage_service.dart';
 
+/// Storage double that throws on [getHasCompletedOnboarding] to simulate a
+/// storage failure (e.g. corrupted SharedPreferences, platform exception).
+class _ThrowingStorageService extends FakeLocalStorageService {
+  @override
+  Future<bool> getHasCompletedOnboarding() =>
+      Future.error(StateError('storage unavailable'));
+}
+
 void main() {
   testWidgets('shows splash inside the centered mobile frame', (tester) async {
     tester.view.physicalSize = const Size(1440, 900);
@@ -139,6 +147,31 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Quick Actions'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'deep-link to protected route redirects to onboarding when storage read throws',
+    (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            localStorageServiceProvider
+                .overrideWithValue(_ThrowingStorageService()),
+          ],
+          child: const OhokApp(initialLocation: '/home'),
+        ),
+      );
+      // Let the initial frame render, then give the async Future.error time
+      // to propagate through the microtask queue.
+      await tester.pump();
+      await tester.pump(Duration.zero);
+      await tester.pump(); // router re-evaluates after guard notifyListeners
+
+      // After the storage error the guard must finish loading (with safe
+      // default: not onboarded) and redirect away from the protected route.
+      expect(find.byType(OnboardingScreen), findsOneWidget,
+          reason: 'Storage error should redirect to onboarding as safe default');
     },
   );
 }

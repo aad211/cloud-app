@@ -23,6 +23,12 @@ class OnboardingGuard extends ChangeNotifier {
       _isLoaded = true;
       _isOnboarded = done;
       notifyListeners();
+    }).catchError((Object _) {
+      // Safe default on storage failure: treat user as not onboarded so
+      // protected routes are still guarded even if persistence is unavailable.
+      _isLoaded = true;
+      _isOnboarded = false;
+      notifyListeners();
     });
   }
 
