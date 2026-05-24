@@ -4,12 +4,30 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:ohok_flutter/app/theme/app_colors.dart';
 import 'package:ohok_flutter/core/models/analysis_record.dart';
+import 'package:ohok_flutter/core/widgets/parity_cards.dart';
 import 'package:ohok_flutter/features/analysis/presentation/analysis_history_controller.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   static final _dateFmt = DateFormat('MMMM d, y • hh:mm a', 'en_US');
+  static const _healthInsights = [
+    _InsightCardData(
+      emoji: '🫁',
+      title: 'Understanding COPD',
+      description: 'Learn about chronic obstructive pulmonary disease',
+    ),
+    _InsightCardData(
+      emoji: '🌿',
+      title: 'Air Quality Tips',
+      description: 'How to protect your lungs from pollution',
+    ),
+    _InsightCardData(
+      emoji: '🚭',
+      title: 'Quit Smoking Guide',
+      description: 'Steps to improve your respiratory health',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,53 +41,45 @@ class HomeScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               Row(
                 children: [
                   const Icon(Icons.cloud, color: AppColors.navy, size: 32),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'CLOUD',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(color: AppColors.navy),
-                      ),
-                      Text(
-                        'Cough Lung Observation & Diagnosis',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall
-                            ?.copyWith(color: AppColors.blue),
-                      ),
-                    ],
-                  ),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'CLOUD',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(color: AppColors.navy),
+                        ),
+                        Text(
+                          'Cough Lung Observation & Diagnosis',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: AppColors.blue),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
-
-              // Analysis card
               historyAsync.when(
                 loading: () => const _AnalysisLoadingCard(),
                 error: (_, __) => const _EmptyAnalysisCard(),
-                data: (history) => history.isEmpty
-                    ? const _EmptyAnalysisCard()
-                    : _LatestAnalysisCard(record: history.first),
+                data:
+                    (history) =>
+                        history.isEmpty
+                            ? const _EmptyAnalysisCard()
+                            : _LatestAnalysisCard(record: history.first),
               ),
               const SizedBox(height: 20),
-
-              // Quick Actions
               Text(
                 'Quick Actions',
-                style: Theme.of(context)
-                    .textTheme
-                    .labelMedium
-                    ?.copyWith(color: AppColors.navy),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.copyWith(color: AppColors.navy),
               ),
               const SizedBox(height: 12),
               SizedBox(
@@ -110,6 +120,30 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 24),
+              Text(
+                'Health Insights',
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.copyWith(color: AppColors.navy),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 250,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _healthInsights.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder:
+                      (context, index) =>
+                          _InsightCard(article: _healthInsights[index]),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const ParityDisclaimerCard(
+                message:
+                    '⚠️ Not a medical diagnosis. Consult healthcare professionals.',
+              ),
             ],
           ),
         ),
@@ -118,29 +152,17 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-
 class _EmptyAnalysisCard extends StatelessWidget {
   const _EmptyAnalysisCard();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.navy, AppColors.blue],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-      ),
+    return const ParityGradientCard(
       child: Column(
         children: [
-          const Text('🫁', style: TextStyle(fontSize: 48)),
-          const SizedBox(height: 12),
-          const Text(
+          Text('🫁', style: TextStyle(fontSize: 48)),
+          SizedBox(height: 12),
+          Text(
             'No Analysis Yet',
             style: TextStyle(
               color: Colors.white,
@@ -148,11 +170,11 @@ class _EmptyAnalysisCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'Start by checking your symptoms to get your first respiratory health analysis',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13),
+            style: TextStyle(color: Color(0xCCFFFFFF), fontSize: 13),
           ),
         ],
       ),
@@ -183,17 +205,7 @@ class _LatestAnalysisCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.navy, AppColors.blue],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-      ),
+    return ParityGradientCard(
       child: Column(
         children: [
           Text(
@@ -202,6 +214,11 @@ class _LatestAnalysisCard extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.7),
               fontSize: 13,
             ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _conditionIcon(record.condition),
+            style: const TextStyle(fontSize: 56),
           ),
           const SizedBox(height: 8),
           Text(
@@ -219,13 +236,25 @@ class _LatestAnalysisCard extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(
-              '${record.percentage}%',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-              ),
+            child: Column(
+              children: [
+                Text(
+                  'Confidence',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${record.percentage}%',
+                  style: TextStyle(
+                    color: _conditionColor(record.condition),
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 8),
@@ -239,6 +268,41 @@ class _LatestAnalysisCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  static String _conditionIcon(String condition) {
+    switch (condition) {
+      case 'Healthy':
+        return '✅';
+      case 'Asthma':
+        return '🫁';
+      case 'Bronchitis':
+        return '🤒';
+      case 'Pneumonia':
+      case 'COVID-19':
+        return '🦠';
+      case 'Lung Cancer':
+        return '⚠️';
+      default:
+        return '🫁';
+    }
+  }
+
+  static Color _conditionColor(String condition) {
+    switch (condition) {
+      case 'Healthy':
+        return AppColors.success;
+      case 'Bronchitis':
+        return AppColors.gold;
+      case 'Pneumonia':
+      case 'COVID-19':
+        return AppColors.danger;
+      case 'Lung Cancer':
+        return AppColors.critical;
+      case 'Asthma':
+      default:
+        return Colors.white;
+    }
   }
 }
 
@@ -279,4 +343,72 @@ class _SecondaryActionButton extends StatelessWidget {
       ),
     );
   }
+}
+
+class _InsightCard extends StatelessWidget {
+  const _InsightCard({required this.article});
+
+  final _InsightCardData article;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 248,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: AppColors.sand, width: 2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(article.emoji, style: const TextStyle(fontSize: 34)),
+          const SizedBox(height: 10),
+          Text(
+            article.title,
+            style: const TextStyle(
+              color: AppColors.navy,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            article.description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: AppColors.blue, fontSize: 11),
+          ),
+          const SizedBox(height: 10),
+          TextButton(
+            onPressed: () {},
+            style: TextButton.styleFrom(
+              backgroundColor: AppColors.infoBackground,
+              foregroundColor: AppColors.navy,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('Read more'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InsightCardData {
+  const _InsightCardData({
+    required this.emoji,
+    required this.title,
+    required this.description,
+  });
+
+  final String emoji;
+  final String title;
+  final String description;
 }

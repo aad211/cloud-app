@@ -12,9 +12,7 @@ import '../../test_helpers/fake_local_storage_service.dart';
 
 Widget _buildHome({required FakeLocalStorageService storage}) {
   return ProviderScope(
-    overrides: [
-      localStorageServiceProvider.overrideWithValue(storage),
-    ],
+    overrides: [localStorageServiceProvider.overrideWithValue(storage)],
     child: const MaterialApp(home: HomeScreen()),
   );
 }
@@ -23,37 +21,37 @@ Widget _buildHomeRouter({required FakeLocalStorageService storage}) {
   final router = GoRouter(
     initialLocation: '/home',
     routes: [
-      GoRoute(
-        path: '/home',
-        builder: (_, __) => const HomeScreen(),
-      ),
+      GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
       GoRoute(
         path: '/check-symptoms',
-        builder: (_, __) =>
-            const Scaffold(body: Center(child: Text('Check Symptoms Page'))),
+        builder:
+            (_, __) => const Scaffold(
+              body: Center(child: Text('Check Symptoms Page')),
+            ),
       ),
       GoRoute(
         path: '/history',
-        builder: (_, __) =>
-            const Scaffold(body: Center(child: Text('History Page'))),
+        builder:
+            (_, __) =>
+                const Scaffold(body: Center(child: Text('History Page'))),
       ),
       GoRoute(
         path: '/hospitals',
-        builder: (_, __) =>
-            const Scaffold(body: Center(child: Text('Hospitals Page'))),
+        builder:
+            (_, __) =>
+                const Scaffold(body: Center(child: Text('Hospitals Page'))),
       ),
       GoRoute(
         path: '/articles',
-        builder: (_, __) =>
-            const Scaffold(body: Center(child: Text('Articles Page'))),
+        builder:
+            (_, __) =>
+                const Scaffold(body: Center(child: Text('Articles Page'))),
       ),
     ],
   );
 
   return ProviderScope(
-    overrides: [
-      localStorageServiceProvider.overrideWithValue(storage),
-    ],
+    overrides: [localStorageServiceProvider.overrideWithValue(storage)],
     child: MaterialApp.router(routerConfig: router),
   );
 }
@@ -70,8 +68,9 @@ void main() {
       expect(find.text('Latest Analysis'), findsNothing);
     });
 
-    testWidgets('shows Quick Actions heading and Check Symptoms button',
-        (tester) async {
+    testWidgets('shows Quick Actions heading and Check Symptoms button', (
+      tester,
+    ) async {
       final storage = FakeLocalStorageService();
 
       await tester.pumpWidget(_buildHome(storage: storage));
@@ -91,6 +90,27 @@ void main() {
       expect(find.text('Hospital'), findsOneWidget);
       expect(find.text('Articles'), findsOneWidget);
     });
+
+    testWidgets('shows health insights cards and disclaimer copy', (
+      tester,
+    ) async {
+      final storage = FakeLocalStorageService();
+
+      await tester.pumpWidget(_buildHome(storage: storage));
+      await tester.pump();
+
+      expect(find.text('Health Insights'), findsOneWidget);
+      expect(find.text('Understanding COPD'), findsOneWidget);
+      expect(find.text('Air Quality Tips'), findsOneWidget);
+      expect(find.text('Quit Smoking Guide'), findsOneWidget);
+      expect(find.text('Read more'), findsNWidgets(3));
+      expect(
+        find.text(
+          '⚠️ Not a medical diagnosis. Consult healthcare professionals.',
+        ),
+        findsOneWidget,
+      );
+    });
   });
 
   group('HomeScreen – with saved history', () {
@@ -106,18 +126,20 @@ void main() {
       return storage;
     }
 
-    testWidgets('uses English timestamp formatting regardless of ambient locale',
-        (tester) async {
-      final originalLocale = Intl.defaultLocale;
-      await initializeDateFormatting('id_ID');
-      Intl.defaultLocale = 'id_ID';
-      addTearDown(() => Intl.defaultLocale = originalLocale);
+    testWidgets(
+      'uses English timestamp formatting regardless of ambient locale',
+      (tester) async {
+        final originalLocale = Intl.defaultLocale;
+        await initializeDateFormatting('id_ID');
+        Intl.defaultLocale = 'id_ID';
+        addTearDown(() => Intl.defaultLocale = originalLocale);
 
-      await tester.pumpWidget(_buildHome(storage: storageWithRecord()));
-      await tester.pump();
+        await tester.pumpWidget(_buildHome(storage: storageWithRecord()));
+        await tester.pump();
 
-      expect(find.text('June 15, 2025 • 02:30 PM'), findsOneWidget);
-    });
+        expect(find.text('June 15, 2025 • 02:30 PM'), findsOneWidget);
+      },
+    );
 
     testWidgets('shows Latest Analysis heading', (tester) async {
       await tester.pumpWidget(_buildHome(storage: storageWithRecord()));
@@ -147,12 +169,23 @@ void main() {
       // DateFormat('MMMM d, y • hh:mm a') for 2025-06-15 14:30
       expect(find.text('June 15, 2025 • 02:30 PM'), findsOneWidget);
     });
+
+    testWidgets('shows condition emoji and confidence label', (tester) async {
+      await tester.pumpWidget(_buildHome(storage: storageWithRecord()));
+      await tester.pump();
+
+      expect(find.text('🫁'), findsWidgets);
+      expect(find.text('Confidence'), findsOneWidget);
+    });
   });
 
   group('HomeScreen quick actions', () {
-    testWidgets('navigates to Check Symptoms from the primary CTA',
-        (tester) async {
-      await tester.pumpWidget(_buildHomeRouter(storage: FakeLocalStorageService()));
+    testWidgets('navigates to Check Symptoms from the primary CTA', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHomeRouter(storage: FakeLocalStorageService()),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Check Symptoms'));
@@ -162,9 +195,12 @@ void main() {
       expect(find.byType(HomeScreen), findsNothing);
     });
 
-    testWidgets('navigates to History from the secondary action',
-        (tester) async {
-      await tester.pumpWidget(_buildHomeRouter(storage: FakeLocalStorageService()));
+    testWidgets('navigates to History from the secondary action', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHomeRouter(storage: FakeLocalStorageService()),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('History'));
@@ -174,9 +210,12 @@ void main() {
       expect(find.byType(HomeScreen), findsNothing);
     });
 
-    testWidgets('navigates to Hospitals from the secondary action',
-        (tester) async {
-      await tester.pumpWidget(_buildHomeRouter(storage: FakeLocalStorageService()));
+    testWidgets('navigates to Hospitals from the secondary action', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHomeRouter(storage: FakeLocalStorageService()),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Hospital'));
@@ -186,9 +225,12 @@ void main() {
       expect(find.byType(HomeScreen), findsNothing);
     });
 
-    testWidgets('navigates to Articles from the secondary action',
-        (tester) async {
-      await tester.pumpWidget(_buildHomeRouter(storage: FakeLocalStorageService()));
+    testWidgets('navigates to Articles from the secondary action', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHomeRouter(storage: FakeLocalStorageService()),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Articles'));
@@ -207,29 +249,34 @@ void main() {
     });
 
     testWidgets(
-        'Check Symptoms primary CTA preserves Home in back stack after push',
-        (tester) async {
+      'Check Symptoms primary CTA preserves Home in back stack after push',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildHomeRouter(storage: FakeLocalStorageService()),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Check Symptoms'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Check Symptoms Page'), findsOneWidget);
+        // With push (not go), GoRouter can pop back to Home.
+        final router = GoRouter.of(
+          tester.element(find.text('Check Symptoms Page')),
+        );
+        expect(router.canPop(), isTrue);
+        router.pop();
+        await tester.pumpAndSettle();
+        expect(find.byType(HomeScreen), findsOneWidget);
+      },
+    );
+
+    testWidgets('Hospital secondary action preserves Home in back stack', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-          _buildHomeRouter(storage: FakeLocalStorageService()));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Check Symptoms'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Check Symptoms Page'), findsOneWidget);
-      // With push (not go), GoRouter can pop back to Home.
-      final router =
-          GoRouter.of(tester.element(find.text('Check Symptoms Page')));
-      expect(router.canPop(), isTrue);
-      router.pop();
-      await tester.pumpAndSettle();
-      expect(find.byType(HomeScreen), findsOneWidget);
-    });
-
-    testWidgets('Hospital secondary action preserves Home in back stack',
-        (tester) async {
-      await tester.pumpWidget(
-          _buildHomeRouter(storage: FakeLocalStorageService()));
+        _buildHomeRouter(storage: FakeLocalStorageService()),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Hospital'));
@@ -237,8 +284,7 @@ void main() {
 
       expect(find.text('Hospitals Page'), findsOneWidget);
       // With push (not go), GoRouter can pop back to Home.
-      final router =
-          GoRouter.of(tester.element(find.text('Hospitals Page')));
+      final router = GoRouter.of(tester.element(find.text('Hospitals Page')));
       expect(router.canPop(), isTrue);
       router.pop();
       await tester.pumpAndSettle();

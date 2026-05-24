@@ -13,12 +13,26 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with SingleTickerProviderStateMixin {
   Timer? _navTimer;
+  late final AnimationController _pulseController;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _opacityAnimation;
 
   @override
   void initState() {
     super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+    final pulseCurve = CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    );
+    _scaleAnimation = Tween<double>(begin: 0.97, end: 1).animate(pulseCurve);
+    _opacityAnimation = Tween<double>(begin: 0.92, end: 1).animate(pulseCurve);
     _navTimer = Timer(const Duration(seconds: 2), () async {
       final completed =
           await ref
@@ -32,25 +46,66 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void dispose() {
     _navTimer?.cancel();
+    _pulseController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      child: const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.cloud, size: 120, color: AppColors.navy),
-            SizedBox(height: 24),
-            Text(
-              'CLOUD',
-              style: TextStyle(fontSize: 42, color: AppColors.navy),
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.navy, AppColors.blue],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: FadeTransition(
+          opacity: _opacityAnimation,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 36),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(32),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    blurRadius: 40,
+                    spreadRadius: 8,
+                  ),
+                ],
+              ),
+              child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.cloud, size: 120, color: Colors.white),
+                  SizedBox(height: 24),
+                  Text(
+                    'CLOUD',
+                    style: TextStyle(
+                      fontSize: 56,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    'Cough Lung Observation\n& Diagnosis',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      height: 1.5,
+                      color: Color(0xFFF4F8FB),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            Text('Cough Lung Observation & Diagnosis'),
-          ],
+          ),
         ),
       ),
     );
