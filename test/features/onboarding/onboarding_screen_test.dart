@@ -176,4 +176,37 @@ void main() {
     expect(find.text('Welcome to CLOUD'), findsOneWidget);
     expect(find.text('Simple Audio Recording'), findsNothing);
   });
+
+  testWidgets('recovers from thrown persistence errors and allows retry',
+      (tester) async {
+    final storage = FakeLocalStorageService()
+      ..persistenceException = Exception('write failed');
+    final reportedErrors = <FlutterErrorDetails>[];
+    final originalOnError = FlutterError.onError;
+
+    FlutterError.onError = reportedErrors.add;
+    addTearDown(() => FlutterError.onError = originalOnError);
+
+    await tester.pumpWidget(_buildHarness(storage));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Skip'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(OnboardingScreen), findsOneWidget);
+    expect(
+      find.text('Failed to save progress. Please try again.'),
+      findsOneWidget,
+    );
+    expect(storage.hasCompletedOnboarding, isFalse);
+    expect(reportedErrors, hasLength(1));
+
+    storage.persistenceException = null;
+
+    await tester.tap(find.text('Skip'));
+    await tester.pumpAndSettle();
+
+    expect(storage.setHasCompletedOnboardingCallCount, 2);
+    expect(find.text('Quick Actions'), findsOneWidget);
+  });
 }

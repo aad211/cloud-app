@@ -6,6 +6,7 @@ class FakeLocalStorageService implements LocalStorageService {
 
   /// Set to `true` to make [setHasCompletedOnboarding] simulate a write failure.
   bool shouldFailPersistence = false;
+  Exception? persistenceException;
   Duration persistenceDelay = Duration.zero;
   int setHasCompletedOnboardingCallCount = 0;
 
@@ -18,6 +19,7 @@ class FakeLocalStorageService implements LocalStorageService {
     if (persistenceDelay > Duration.zero) {
       await Future<void>.delayed(persistenceDelay);
     }
+    if (persistenceException != null) throw persistenceException!;
     if (shouldFailPersistence) return false;
     hasCompletedOnboarding = value;
     return true;

@@ -21,9 +21,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _finish() async {
     if (_isFinishing || _isTransitioning) return;
     setState(() => _isFinishing = true);
-    final ok = await ref
-        .read(localStorageServiceProvider)
-        .setHasCompletedOnboarding(true);
+    bool ok;
+    try {
+      ok = await ref
+          .read(localStorageServiceProvider)
+          .setHasCompletedOnboarding(true);
+    } on Exception catch (error, stackTrace) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'onboarding_screen',
+          context: ErrorDescription(
+            'Persisting onboarding completion failed.',
+          ),
+        ),
+      );
+      ok = false;
+    }
     if (!mounted) return;
     if (!ok) {
       setState(() => _isFinishing = false);
