@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ohok_flutter/app/router/app_router.dart';
 import 'package:ohok_flutter/app/theme/app_colors.dart';
 import 'package:ohok_flutter/core/storage/local_storage_service.dart';
 import 'package:ohok_flutter/features/onboarding/data/onboarding_slides.dart';
@@ -49,6 +50,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       );
       return;
     }
+    ref.read(onboardingGuardProvider).markOnboarded();
     context.go('/home');
   }
 

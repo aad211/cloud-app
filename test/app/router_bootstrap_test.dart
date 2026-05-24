@@ -101,4 +101,44 @@ void main() {
     // No exceptions means dispose ran cleanly.
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'deep-link to a protected route redirects to onboarding when incomplete',
+    (tester) async {
+      final fakeStorage = FakeLocalStorageService()
+        ..hasCompletedOnboarding = false;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            localStorageServiceProvider.overrideWithValue(fakeStorage),
+          ],
+          child: const OhokApp(initialLocation: '/home'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(OnboardingScreen), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'direct /onboarding route redirects to home when onboarding is already complete',
+    (tester) async {
+      final fakeStorage = FakeLocalStorageService()
+        ..hasCompletedOnboarding = true;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            localStorageServiceProvider.overrideWithValue(fakeStorage),
+          ],
+          child: const OhokApp(initialLocation: '/onboarding'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Quick Actions'), findsOneWidget);
+    },
+  );
 }

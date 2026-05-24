@@ -88,7 +88,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('History'), findsOneWidget);
-      expect(find.text('Hospitals'), findsOneWidget);
+      expect(find.text('Hospital'), findsOneWidget);
       expect(find.text('Articles'), findsOneWidget);
     });
   });
@@ -179,7 +179,7 @@ void main() {
       await tester.pumpWidget(_buildHomeRouter(storage: FakeLocalStorageService()));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Hospitals'));
+      await tester.tap(find.text('Hospital'));
       await tester.pumpAndSettle();
 
       expect(find.text('Hospitals Page'), findsOneWidget);
@@ -196,6 +196,53 @@ void main() {
 
       expect(find.text('Articles Page'), findsOneWidget);
       expect(find.byType(HomeScreen), findsNothing);
+    });
+
+    testWidgets('uses React-parity singular Hospital label', (tester) async {
+      await tester.pumpWidget(_buildHome(storage: FakeLocalStorageService()));
+      await tester.pump();
+
+      expect(find.text('Hospital'), findsOneWidget);
+      expect(find.text('Hospitals'), findsNothing);
+    });
+
+    testWidgets(
+        'Check Symptoms primary CTA preserves Home in back stack after push',
+        (tester) async {
+      await tester.pumpWidget(
+          _buildHomeRouter(storage: FakeLocalStorageService()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Check Symptoms'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Check Symptoms Page'), findsOneWidget);
+      // With push (not go), GoRouter can pop back to Home.
+      final router =
+          GoRouter.of(tester.element(find.text('Check Symptoms Page')));
+      expect(router.canPop(), isTrue);
+      router.pop();
+      await tester.pumpAndSettle();
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+
+    testWidgets('Hospital secondary action preserves Home in back stack',
+        (tester) async {
+      await tester.pumpWidget(
+          _buildHomeRouter(storage: FakeLocalStorageService()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Hospital'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hospitals Page'), findsOneWidget);
+      // With push (not go), GoRouter can pop back to Home.
+      final router =
+          GoRouter.of(tester.element(find.text('Hospitals Page')));
+      expect(router.canPop(), isTrue);
+      router.pop();
+      await tester.pumpAndSettle();
+      expect(find.byType(HomeScreen), findsOneWidget);
     });
   });
 }

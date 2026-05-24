@@ -1,18 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ohok_flutter/app/router/app_router.dart';
 import 'package:ohok_flutter/app/theme/app_theme.dart';
 import 'package:ohok_flutter/core/widgets/mobile_frame.dart';
 
-class OhokApp extends StatefulWidget {
-  const OhokApp({super.key});
+class OhokApp extends ConsumerStatefulWidget {
+  const OhokApp({super.key, this.initialLocation});
+
+  /// Optional override for the router's initial location; used in tests.
+  final String? initialLocation;
 
   @override
-  State<OhokApp> createState() => _OhokAppState();
+  ConsumerState<OhokApp> createState() => _OhokAppState();
 }
 
-class _OhokAppState extends State<OhokApp> {
-  late final GoRouter _router = buildRouter();
+class _OhokAppState extends ConsumerState<OhokApp> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    final guard = ref.read(onboardingGuardProvider);
+    _router = buildRouter(
+      onboardingGuard: guard,
+      initialLocation: widget.initialLocation,
+    );
+  }
 
   @override
   void dispose() {

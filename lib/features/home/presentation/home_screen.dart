@@ -75,7 +75,7 @@ class HomeScreen extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () => context.go('/check-symptoms'),
+                  onPressed: () => context.push('/check-symptoms'),
                   icon: const Icon(Icons.monitor_heart),
                   label: const Text('Check Symptoms'),
                   style: ElevatedButton.styleFrom(
@@ -94,19 +94,19 @@ class HomeScreen extends ConsumerWidget {
                   _SecondaryActionButton(
                     icon: Icons.article_outlined,
                     label: 'Articles',
-                    onTap: () => context.go('/articles'),
+                    onTap: () => context.push('/articles'),
                   ),
                   const SizedBox(width: 12),
                   _SecondaryActionButton(
                     icon: Icons.history,
                     label: 'History',
-                    onTap: () => context.go('/history'),
+                    onTap: () => context.push('/history'),
                   ),
                   const SizedBox(width: 12),
                   _SecondaryActionButton(
                     icon: Icons.local_hospital_outlined,
-                    label: 'Hospitals',
-                    onTap: () => context.go('/hospitals'),
+                    label: 'Hospital',
+                    onTap: () => context.push('/hospitals'),
                   ),
                 ],
               ),

@@ -46,6 +46,7 @@ void main() {
   testWidgets('analyze requires recording and saves a mocked result',
       (tester) async {
     final storage = FakeLocalStorageService();
+    storage.hasCompletedOnboarding = true; // must be set before guard init
 
     await tester.pumpWidget(
       ProviderScope(
@@ -54,7 +55,6 @@ void main() {
       ),
     );
 
-    storage.hasCompletedOnboarding = true;
     await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
 
@@ -229,4 +229,48 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'shows error and stays on screen when history save fails, then allows retry',
+    (tester) async {
+      final storage = FakeLocalStorageService()
+        ..historySaveException = Exception('disk full');
+
+      await tester.pumpWidget(_buildCheckSymptomsHarness(storage));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Tap to record your cough'));
+      await tester.pump(const Duration(seconds: 11));
+      await tester.pumpAndSettle();
+      expect(find.text('Cough recorded ✓'), findsOneWidget);
+
+      await tester.tap(find.text('Analyze Now'));
+      await tester.pump(const Duration(seconds: 3));
+      // Consume the framework-level exception from the unhandled async error.
+      // In GREEN (fixed code), analyze() catches it internally and calls
+      // FlutterError.reportError, so the framework still stores one exception
+      // here; takeException() clears it in both RED and GREEN so assertions
+      // can proceed.
+      tester.takeException();
+      await tester.pump();
+
+      // Should stay on the check-symptoms screen with an error message.
+      expect(find.text('Analyze Now'), findsOneWidget);
+      expect(find.text('Analysis Result'), findsNothing);
+      expect(
+        find.text('Failed to save analysis. Please try again.'),
+        findsOneWidget,
+      );
+      expect(storage.history, isEmpty);
+
+      // After clearing the exception, retrying should succeed.
+      storage.historySaveException = null;
+      await tester.tap(find.text('Analyze Now'));
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Analysis Result'), findsOneWidget);
+      expect(storage.history, isNotEmpty);
+    },
+  );
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ohok_flutter/features/analysis/data/mock_analysis_repository.dart';
 import 'package:ohok_flutter/features/analysis/presentation/analysis_history_controller.dart';
@@ -68,7 +69,24 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
     await Future<void>.delayed(const Duration(milliseconds: 2500));
     if (!mounted) return false;
     final record = _repository.buildRecord();
-    await ref.read(analysisHistoryProvider.notifier).addRecord(record);
+    try {
+      await ref.read(analysisHistoryProvider.notifier).addRecord(record);
+    } catch (e, st) {
+      if (!mounted) return false;
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: e,
+          stack: st,
+          library: 'check_symptoms_controller',
+          context: ErrorDescription('Failed to persist analysis result.'),
+        ),
+      );
+      state = state.copyWith(
+        buttonState: AnalysisButtonState.idle,
+        errorMessage: 'Failed to save analysis. Please try again.',
+      );
+      return false;
+    }
     if (!mounted) return false;
     state = state.copyWith(buttonState: AnalysisButtonState.success);
     return true;
