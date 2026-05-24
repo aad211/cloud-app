@@ -73,7 +73,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
-          'History',
+          'Symptom History',
           style: TextStyle(color: AppColors.navy, fontWeight: FontWeight.w700),
         ),
         iconTheme: const IconThemeData(color: AppColors.navy),
