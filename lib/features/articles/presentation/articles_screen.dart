@@ -10,16 +10,20 @@ class ArticlesScreen extends StatefulWidget {
 }
 
 class _ArticlesScreenState extends State<ArticlesScreen> {
+  var tab = 0;
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
+      initialIndex: tab,
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text('Articles and News'),
-          bottom: const TabBar(
-            tabs: [
+          bottom: TabBar(
+            onTap: (value) => setState(() => tab = value),
+            tabs: const [
               Tab(text: 'Articles'),
               Tab(text: 'News'),
             ],

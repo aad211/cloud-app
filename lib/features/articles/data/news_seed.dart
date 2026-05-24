@@ -1,6 +1,6 @@
 import 'package:ohok_flutter/core/models/news_record.dart';
 
-const newsSeed = [
+const List<NewsRecord> newsSeed = [
   NewsRecord(
     title: 'New AI Algorithm Detects Lung Diseases Earlier',
     date: 'April 25, 2026',

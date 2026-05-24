@@ -1,6 +1,6 @@
 import 'package:ohok_flutter/core/models/article_record.dart';
 
-const articleSeed = [
+const List<ArticleRecord> articleSeed = [
   ArticleRecord(
     name: 'Asthma',
     icon: '🫁',
