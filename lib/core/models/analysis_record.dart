@@ -39,7 +39,13 @@ class AnalysisRecord {
         'Analysis record is missing a valid condition.',
       );
     }
-    if (percentage is! int) {
+    final parsedPercentage = switch (percentage) {
+      int value => value,
+      double value when value.isFinite && value.truncateToDouble() == value =>
+        value.toInt(),
+      _ => null,
+    };
+    if (parsedPercentage == null) {
       throw const FormatException(
         'Analysis record is missing a valid percentage.',
       );
@@ -49,7 +55,7 @@ class AnalysisRecord {
       id: id,
       date: date,
       condition: condition,
-      percentage: percentage,
+      percentage: parsedPercentage,
     );
   }
 }

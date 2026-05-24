@@ -32,6 +32,17 @@ void main() {
     expect(decoded.percentage, record.percentage);
   });
 
+  test('AnalysisRecord accepts whole-number percentages encoded as doubles', () {
+    final decoded = AnalysisRecord.fromJson({
+      'id': 'rec-1',
+      'date': '2025-06-15T14:30:00.000',
+      'condition': 'Asthma',
+      'percentage': 87.0,
+    });
+
+    expect(decoded.percentage, 87);
+  });
+
   test('addRecord prepends a record and persists the updated history', () async {
     final existing = AnalysisRecord(
       id: 'existing',
