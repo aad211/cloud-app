@@ -5,6 +5,7 @@ import 'package:ohok_flutter/features/history/presentation/history_screen.dart';
 import 'package:ohok_flutter/features/home/presentation/home_screen.dart';
 import 'package:ohok_flutter/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:ohok_flutter/features/onboarding/presentation/splash_screen.dart';
+import 'package:ohok_flutter/features/hospitals/presentation/hospitals_screen.dart';
 import 'package:ohok_flutter/features/result/presentation/result_screen.dart';
 
 GoRouter buildRouter() {
@@ -28,8 +29,7 @@ GoRouter buildRouter() {
           builder: (context, state) => const HistoryScreen()),
       GoRoute(
           path: '/hospitals',
-          builder: (context, state) => const Scaffold(
-              body: Center(child: Text('Nearby Hospitals')))),
+          builder: (context, state) => const HospitalsScreen()),
       GoRoute(
           path: '/articles',
           builder: (context, state) => const Scaffold(
