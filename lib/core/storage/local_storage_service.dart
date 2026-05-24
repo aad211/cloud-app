@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -30,8 +31,41 @@ class SharedPrefsLocalStorageService implements LocalStorageService {
   Future<List<Map<String, dynamic>>> loadAnalysisHistory() async {
     final raw = _prefs.getString(_historyKey);
     if (raw == null || raw.isEmpty) return [];
-    final decoded = jsonDecode(raw) as List<dynamic>;
-    return decoded.cast<Map<String, dynamic>>();
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) {
+        throw FormatException('Expected a JSON array, got ${decoded.runtimeType}');
+      }
+      return decoded
+          .map((e) {
+            if (e is Map<String, dynamic>) return e;
+            if (e is Map) return Map<String, dynamic>.from(e);
+            throw FormatException('Expected map entry, got ${e.runtimeType}');
+          })
+          .toList();
+    } on FormatException catch (e, st) {
+      FlutterError.reportError(FlutterErrorDetails(
+        exception: e,
+        stack: st,
+        library: 'local_storage_service',
+        context: ErrorDescription(
+          'Corrupted analysisHistory in SharedPreferences; resetting to empty.',
+        ),
+      ));
+      await _prefs.remove(_historyKey);
+      return [];
+    } on TypeError catch (e, st) {
+      FlutterError.reportError(FlutterErrorDetails(
+        exception: e,
+        stack: st,
+        library: 'local_storage_service',
+        context: ErrorDescription(
+          'Type error reading analysisHistory from SharedPreferences; resetting to empty.',
+        ),
+      ));
+      await _prefs.remove(_historyKey);
+      return [];
+    }
   }
 
   @override
