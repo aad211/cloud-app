@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ohok_flutter/core/models/condition_probability.dart';
 import 'package:ohok_flutter/app/theme/app_colors.dart';
 import 'package:ohok_flutter/features/analysis/data/mock_analysis_repository.dart';
 
@@ -69,7 +70,7 @@ class ResultScreen extends StatelessWidget {
 class _ProbabilityRow extends StatelessWidget {
   const _ProbabilityRow({required this.item});
 
-  final dynamic item;
+  final ConditionProbability item;
 
   @override
   Widget build(BuildContext context) {

@@ -48,12 +48,17 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
     state = state.copyWith(isRecording: true, recordingTime: 0, errorMessage: '');
     for (var second = 1; second <= 10; second++) {
       await Future<void>.delayed(const Duration(seconds: 1));
+      if (!mounted) return;
       state = state.copyWith(recordingTime: second);
     }
+    if (!mounted) return;
     state = state.copyWith(isRecording: false, recordingTime: 0, hasRecording: true);
   }
 
   Future<bool> analyze() async {
+    if (state.isRecording || state.buttonState != AnalysisButtonState.idle) {
+      return false;
+    }
     if (!state.hasRecording) {
       state = state.copyWith(errorMessage: 'Please record your cough first');
       return false;

@@ -11,6 +11,8 @@ class CheckSymptomsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(checkSymptomsControllerProvider);
     final controller = ref.read(checkSymptomsControllerProvider.notifier);
+    final canAnalyze =
+        !state.isRecording && state.buttonState == AnalysisButtonState.idle;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -58,12 +60,14 @@ class CheckSymptomsScreen extends ConsumerWidget {
                 ),
               const Spacer(),
               FilledButton(
-                onPressed: () async {
-                  final success = await controller.analyze();
-                  if (success && context.mounted) {
-                    context.go('/result');
-                  }
-                },
+                onPressed: canAnalyze
+                    ? () async {
+                        final success = await controller.analyze();
+                        if (success && context.mounted) {
+                          context.go('/result');
+                        }
+                      }
+                    : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.navy,
                   minimumSize: const Size.fromHeight(56),
