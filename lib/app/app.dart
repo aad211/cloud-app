@@ -15,6 +15,12 @@ class _OhokAppState extends State<OhokApp> {
   late final GoRouter _router = buildRouter();
 
   @override
+  void dispose() {
+    _router.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
       theme: buildAppTheme(),
