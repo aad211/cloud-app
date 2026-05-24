@@ -3,8 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ohok_flutter/app/app.dart';
 
 void main() {
-  testWidgets('boots the OHOK app shell', (tester) async {
+  testWidgets('boots into splash screen showing CLOUD', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: OhokApp()));
-    expect(find.text('OHOK'), findsOneWidget);
+    await tester.pump();
+    expect(find.text('CLOUD'), findsOneWidget);
   });
 }
