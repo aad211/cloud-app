@@ -9,7 +9,7 @@ import 'package:ohok_flutter/features/analysis/presentation/analysis_history_con
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  static final _dateFmt = DateFormat('MMMM d, y • hh:mm a');
+  static final _dateFmt = DateFormat('MMMM d, y • hh:mm a', 'en_US');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

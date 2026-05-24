@@ -106,6 +106,19 @@ void main() {
       return storage;
     }
 
+    testWidgets('uses English timestamp formatting regardless of ambient locale',
+        (tester) async {
+      final originalLocale = Intl.defaultLocale;
+      await initializeDateFormatting('id_ID');
+      Intl.defaultLocale = 'id_ID';
+      addTearDown(() => Intl.defaultLocale = originalLocale);
+
+      await tester.pumpWidget(_buildHome(storage: storageWithRecord()));
+      await tester.pump();
+
+      expect(find.text('June 15, 2025 • 02:30 PM'), findsOneWidget);
+    });
+
     testWidgets('shows Latest Analysis heading', (tester) async {
       await tester.pumpWidget(_buildHome(storage: storageWithRecord()));
       await tester.pump();
@@ -132,19 +145,6 @@ void main() {
       await tester.pump();
 
       // DateFormat('MMMM d, y • hh:mm a') for 2025-06-15 14:30
-      expect(find.text('June 15, 2025 • 02:30 PM'), findsOneWidget);
-    });
-
-    testWidgets('uses English timestamp formatting regardless of ambient locale',
-        (tester) async {
-      final originalLocale = Intl.defaultLocale;
-      await initializeDateFormatting('id_ID');
-      Intl.defaultLocale = 'id_ID';
-      addTearDown(() => Intl.defaultLocale = originalLocale);
-
-      await tester.pumpWidget(_buildHome(storage: storageWithRecord()));
-      await tester.pump();
-
       expect(find.text('June 15, 2025 • 02:30 PM'), findsOneWidget);
     });
   });
