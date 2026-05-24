@@ -17,10 +17,22 @@ void main() {
           findsOneWidget);
     });
 
-    testWidgets('shows all seed hospitals by default', (tester) async {
+    testWidgets('shows the planned hospital seed entries by default',
+        (tester) async {
       await tester.pumpWidget(_buildSubject());
       expect(find.text('City General Hospital'), findsOneWidget);
+      expect(find.text('St. Mary Medical Center'), findsOneWidget);
+      expect(find.text('Metropolitan Health Clinic'), findsOneWidget);
+      expect(find.text('1.2 km • 123 Main St, Downtown'), findsOneWidget);
+      expect(find.text('2.1 km • 456 Oak Ave, Central'), findsOneWidget);
+      expect(find.text('3.5 km • 789 Pine Rd, Uptown'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Riverside Hospital'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
       expect(find.text('Riverside Hospital'), findsOneWidget);
+      expect(find.text('4.8 km • 321 River St, Westside'), findsOneWidget);
     });
 
     testWidgets('shows Emergency Call button (disabled)', (tester) async {
@@ -29,6 +41,13 @@ void main() {
         find.widgetWithText(ElevatedButton, 'Emergency Call'),
       );
       expect(btn.onPressed, isNull);
+    });
+
+    testWidgets('wraps the screen body in SafeArea', (tester) async {
+      await tester.pumpWidget(_buildSubject());
+
+      final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+      expect(scaffold.body, isA<SafeArea>());
     });
   });
 
@@ -56,6 +75,11 @@ void main() {
       await tester.pump();
 
       expect(find.text('City General Hospital'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Riverside Hospital'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
       expect(find.text('Riverside Hospital'), findsOneWidget);
     });
 
