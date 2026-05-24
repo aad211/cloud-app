@@ -76,7 +76,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Quick Actions'), findsOneWidget);
-      expect(find.text('CLOUD'), findsNothing);
+      // Home screen now shows 'CLOUD' branding — verify we landed on HomeScreen.
+      expect(find.text('CLOUD'), findsOneWidget);
     },
   );
 
