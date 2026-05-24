@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ohok_flutter/features/analysis/presentation/check_symptoms_screen.dart';
 import 'package:ohok_flutter/features/home/presentation/home_screen.dart';
 import 'package:ohok_flutter/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:ohok_flutter/features/onboarding/presentation/splash_screen.dart';
-
-Widget _placeholder(String title) => Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(child: Text(title)),
-    );
+import 'package:ohok_flutter/features/result/presentation/result_screen.dart';
 
 GoRouter buildRouter() {
   return GoRouter(
@@ -21,16 +18,22 @@ GoRouter buildRouter() {
           path: '/home', builder: (context, state) => const HomeScreen()),
       GoRoute(
           path: '/check-symptoms',
-          builder: (context, state) => _placeholder('Check Symptoms')),
+          builder: (context, state) => const CheckSymptomsScreen()),
+      GoRoute(
+          path: '/result',
+          builder: (context, state) => const ResultScreen()),
       GoRoute(
           path: '/history',
-          builder: (context, state) => _placeholder('History')),
+          builder: (context, state) => const Scaffold(
+              body: Center(child: Text('Symptom History')))),
       GoRoute(
           path: '/hospitals',
-          builder: (context, state) => _placeholder('Hospitals')),
+          builder: (context, state) => const Scaffold(
+              body: Center(child: Text('Nearby Hospitals')))),
       GoRoute(
           path: '/articles',
-          builder: (context, state) => _placeholder('Articles')),
+          builder: (context, state) => const Scaffold(
+              body: Center(child: Text('Articles and News')))),
     ],
   );
 }
