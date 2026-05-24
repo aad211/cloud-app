@@ -46,7 +46,7 @@ class AnalysisHistoryController
 
   Future<void> addRecord(AnalysisRecord record) async {
     final storage = ref.read(localStorageServiceProvider);
-    final current = state.valueOrNull ?? [];
+    final current = state.valueOrNull ?? await future;
     final updated = [record, ...current];
     await storage.saveAnalysisHistory(
       updated.map((r) => r.toJson()).toList(),

@@ -178,4 +178,35 @@ void main() {
     expect(records.single.id, validRecord.id);
     expect(reportedErrors, hasLength(2));
   });
+
+  test('addRecord waits for the initial load before composing history',
+      () async {
+    final existing = AnalysisRecord(
+      id: 'existing',
+      date: DateTime(2025, 6, 15, 14, 30),
+      condition: 'Asthma',
+      percentage: 87,
+    );
+    final incoming = AnalysisRecord(
+      id: 'incoming',
+      date: DateTime(2025, 6, 16, 9),
+      condition: 'Bronchitis',
+      percentage: 65,
+    );
+    final storage = FakeLocalStorageService()
+      ..history = [existing.toJson()]
+      ..historyLoadDelay = const Duration(milliseconds: 50);
+    final container = _buildContainer(storage);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(analysisHistoryProvider.notifier);
+
+    await notifier.addRecord(incoming);
+
+    final state = await container.read(analysisHistoryProvider.future);
+    expect(state, hasLength(2));
+    expect(state.first.id, incoming.id);
+    expect(state.last.id, existing.id);
+    expect(storage.history, [incoming.toJson(), existing.toJson()]);
+  });
 }

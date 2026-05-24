@@ -10,6 +10,7 @@ class FakeLocalStorageService implements LocalStorageService {
   Duration persistenceDelay = Duration.zero;
   int setHasCompletedOnboardingCallCount = 0;
   Exception? historySaveException;
+  Duration historyLoadDelay = Duration.zero;
 
   @override
   Future<bool> getHasCompletedOnboarding() async => hasCompletedOnboarding;
@@ -27,7 +28,12 @@ class FakeLocalStorageService implements LocalStorageService {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> loadAnalysisHistory() async => history;
+  Future<List<Map<String, dynamic>>> loadAnalysisHistory() async {
+    if (historyLoadDelay > Duration.zero) {
+      await Future<void>.delayed(historyLoadDelay);
+    }
+    return history;
+  }
 
   @override
   Future<void> saveAnalysisHistory(List<Map<String, dynamic>> records) async {
