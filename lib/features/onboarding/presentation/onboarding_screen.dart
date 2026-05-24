@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ohok_flutter/app/theme/app_colors.dart';
 import 'package:ohok_flutter/core/storage/local_storage_service.dart';
-import '../data/onboarding_slides.dart';
+import 'package:ohok_flutter/features/onboarding/data/onboarding_slides.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -41,7 +41,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             children: [
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(onPressed: _finish, child: const Text('Skip')),
+                child: isLast
+                    ? const SizedBox(height: 48)
+                    : TextButton(onPressed: _finish, child: const Text('Skip')),
               ),
               Expanded(
                 child: PageView.builder(
