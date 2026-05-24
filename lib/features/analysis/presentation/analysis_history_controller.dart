@@ -42,10 +42,10 @@ class AnalysisHistoryController
     final storage = ref.read(localStorageServiceProvider);
     final current = state.valueOrNull ?? [];
     final updated = [record, ...current];
-    state = AsyncData(updated);
     await storage.saveAnalysisHistory(
       updated.map((r) => r.toJson()).toList(),
     );
+    state = AsyncData(updated);
   }
 
   void _reportInvalidRecord(Object error, StackTrace stackTrace) {

@@ -97,4 +97,37 @@ void main() {
     expect(storage.history, [validRecord.toJson()]);
     expect(reportedErrors, hasLength(1));
   });
+
+  test('addRecord leaves state unchanged when persistence fails', () async {
+    final existing = AnalysisRecord(
+      id: 'existing',
+      date: DateTime(2025, 6, 15, 14, 30),
+      condition: 'Asthma',
+      percentage: 87,
+    );
+    final incoming = AnalysisRecord(
+      id: 'incoming',
+      date: DateTime(2025, 6, 16, 9),
+      condition: 'Bronchitis',
+      percentage: 65,
+    );
+    final storage = FakeLocalStorageService()
+      ..history = [existing.toJson()]
+      ..historySaveException = Exception('save failed');
+    final container = _buildContainer(storage);
+    addTearDown(container.dispose);
+
+    await container.read(analysisHistoryProvider.future);
+
+    await expectLater(
+      container.read(analysisHistoryProvider.notifier).addRecord(incoming),
+      throwsException,
+    );
+
+    final state = container.read(analysisHistoryProvider).valueOrNull;
+    expect(state, isNotNull);
+    expect(state, hasLength(1));
+    expect(state!.single.id, existing.id);
+    expect(storage.history, [existing.toJson()]);
+  });
 }
