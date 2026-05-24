@@ -122,4 +122,44 @@ void main() {
     // Onboarding flag must NOT be set
     expect(storage.hasCompletedOnboarding, isFalse);
   });
+
+  testWidgets('ignores repeated Skip taps while persistence is in progress',
+      (tester) async {
+    final storage = FakeLocalStorageService()
+      ..persistenceDelay = const Duration(milliseconds: 300);
+
+    await tester.pumpWidget(_buildHarness(storage));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Skip'));
+    await tester.pump();
+    await tester.tap(find.text('Skip'));
+    await tester.pump();
+
+    expect(storage.setHasCompletedOnboardingCallCount, 1);
+
+    await tester.pump(storage.persistenceDelay);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Quick Actions'), findsOneWidget);
+  });
+
+  testWidgets('disables Next while a page transition is in progress',
+      (tester) async {
+    final storage = FakeLocalStorageService();
+
+    await tester.pumpWidget(_buildHarness(storage));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Next'));
+    await tester.pump();
+
+    final button = tester.widget<FilledButton>(find.byType(FilledButton));
+    expect(button.onPressed, isNull);
+
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Simple Audio Recording'), findsOneWidget);
+  });
 }

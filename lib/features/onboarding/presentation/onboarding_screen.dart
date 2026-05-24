@@ -15,13 +15,18 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _controller = PageController();
   int _index = 0;
+  bool _isFinishing = false;
+  bool _isTransitioning = false;
 
   Future<void> _finish() async {
+    if (_isFinishing || _isTransitioning) return;
+    setState(() => _isFinishing = true);
     final ok = await ref
         .read(localStorageServiceProvider)
         .setHasCompletedOnboarding(true);
     if (!mounted) return;
     if (!ok) {
+      setState(() => _isFinishing = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to save progress. Please try again.'),
@@ -41,6 +46,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final isLast = _index == onboardingSlides.length - 1;
+    final actionsDisabled = _isFinishing || _isTransitioning;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -53,7 +59,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 alignment: Alignment.centerRight,
                 child: isLast
                     ? const SizedBox(height: 48)
-                    : TextButton(onPressed: _finish, child: const Text('Skip')),
+                    : TextButton(
+                        onPressed: actionsDisabled ? null : _finish,
+                        child: const Text('Skip'),
+                      ),
               ),
               Expanded(
                 child: PageView.builder(
@@ -93,15 +102,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
               const SizedBox(height: 16),
               FilledButton(
-                onPressed: () async {
+                onPressed: actionsDisabled
+                    ? null
+                    : () async {
                   if (isLast) {
                     await _finish();
                     return;
                   }
-                  await _controller.nextPage(
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeInOut,
-                  );
+                  setState(() => _isTransitioning = true);
+                  try {
+                    await _controller.nextPage(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                    );
+                  } finally {
+                    if (mounted) {
+                      setState(() => _isTransitioning = false);
+                    }
+                  }
                 },
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.navy,
