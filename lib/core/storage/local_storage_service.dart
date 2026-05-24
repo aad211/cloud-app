@@ -6,7 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class LocalStorageService {
   Future<bool> getHasCompletedOnboarding();
-  Future<void> setHasCompletedOnboarding(bool value);
+  /// Persists [value] and returns `true` on success, `false` on failure.
+  Future<bool> setHasCompletedOnboarding(bool value);
   Future<List<Map<String, dynamic>>> loadAnalysisHistory();
   Future<void> saveAnalysisHistory(List<Map<String, dynamic>> records);
 }
@@ -23,9 +24,8 @@ class SharedPrefsLocalStorageService implements LocalStorageService {
       _prefs.getBool(_onboardingKey) ?? false;
 
   @override
-  Future<void> setHasCompletedOnboarding(bool value) async {
-    await _prefs.setBool(_onboardingKey, value);
-  }
+  Future<bool> setHasCompletedOnboarding(bool value) =>
+      _prefs.setBool(_onboardingKey, value);
 
   @override
   Future<List<Map<String, dynamic>>> loadAnalysisHistory() async {

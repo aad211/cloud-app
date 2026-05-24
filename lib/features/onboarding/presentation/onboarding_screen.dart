@@ -17,8 +17,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _index = 0;
 
   Future<void> _finish() async {
-    await ref.read(localStorageServiceProvider).setHasCompletedOnboarding(true);
+    final ok = await ref
+        .read(localStorageServiceProvider)
+        .setHasCompletedOnboarding(true);
     if (!mounted) return;
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to save progress. Please try again.'),
+        ),
+      );
+      return;
+    }
     context.go('/home');
   }
 
