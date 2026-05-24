@@ -130,4 +130,41 @@ void main() {
     expect(state!.single.id, existing.id);
     expect(storage.history, [existing.toJson()]);
   });
+
+  test(
+      'build keeps valid history when cleanup persistence fails after dropping invalid records',
+      () async {
+    final validRecord = AnalysisRecord(
+      id: 'valid',
+      date: DateTime(2025, 6, 15, 14, 30),
+      condition: 'Asthma',
+      percentage: 87,
+    );
+    final storage = FakeLocalStorageService()
+      ..history = [
+        validRecord.toJson(),
+        {
+          'id': 'broken',
+          'date': 'not-a-date',
+          'condition': 'Bronchitis',
+          'percentage': 65,
+        },
+      ]
+      ..historySaveException = Exception('cleanup save failed');
+    final reportedErrors = <FlutterErrorDetails>[];
+    final originalOnError = FlutterError.onError;
+    final container = _buildContainer(storage);
+
+    FlutterError.onError = reportedErrors.add;
+    addTearDown(() {
+      FlutterError.onError = originalOnError;
+      container.dispose();
+    });
+
+    final records = await container.read(analysisHistoryProvider.future);
+
+    expect(records, hasLength(1));
+    expect(records.single.id, validRecord.id);
+    expect(reportedErrors, hasLength(2));
+  });
 }

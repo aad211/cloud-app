@@ -30,9 +30,15 @@ class AnalysisHistoryController
     }
 
     if (hasInvalidEntries) {
-      await storage.saveAnalysisHistory(
-        records.map((record) => record.toJson()).toList(),
-      );
+      try {
+        await storage.saveAnalysisHistory(
+          records.map((record) => record.toJson()).toList(),
+        );
+      } on StateError catch (error, stackTrace) {
+        _reportCleanupSaveFailure(error, stackTrace);
+      } on Exception catch (error, stackTrace) {
+        _reportCleanupSaveFailure(error, stackTrace);
+      }
     }
 
     return records;
@@ -56,6 +62,19 @@ class AnalysisHistoryController
         library: 'analysis_history_controller',
         context: ErrorDescription(
           'Invalid analysis record in persisted history; dropping entry.',
+        ),
+      ),
+    );
+  }
+
+  void _reportCleanupSaveFailure(Object error, StackTrace stackTrace) {
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: error,
+        stack: stackTrace,
+        library: 'analysis_history_controller',
+        context: ErrorDescription(
+          'Dropping invalid analysis records succeeded, but persisting the cleaned history failed.',
         ),
       ),
     );
