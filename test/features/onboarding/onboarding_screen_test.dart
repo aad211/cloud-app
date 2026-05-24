@@ -29,4 +29,24 @@ void main() {
     expect(storage.hasCompletedOnboarding, isTrue);
     expect(find.text('Quick Actions'), findsOneWidget);
   });
+
+  testWidgets('tapping Skip persists onboarding completion and navigates home', (tester) async {
+    final storage = FakeLocalStorageService();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [localStorageServiceProvider.overrideWithValue(storage)],
+        child: const OhokApp(),
+      ),
+    );
+
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Skip'));
+    await tester.pumpAndSettle();
+
+    expect(storage.hasCompletedOnboarding, isTrue);
+    expect(find.text('Quick Actions'), findsOneWidget);
+  });
 }

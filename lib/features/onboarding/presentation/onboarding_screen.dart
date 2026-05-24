@@ -23,8 +23,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final slide = onboardingSlides[_index];
     final isLast = _index == onboardingSlides.length - 1;
 
     return Scaffold(
@@ -43,16 +48,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   controller: _controller,
                   onPageChanged: (value) => setState(() => _index = value),
                   itemCount: onboardingSlides.length,
-                  itemBuilder: (context, index) => Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(slide.icon, style: const TextStyle(fontSize: 96)),
-                      const SizedBox(height: 24),
-                      Text(slide.title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, color: AppColors.navy)),
-                      const SizedBox(height: 16),
-                      Text(slide.description, textAlign: TextAlign.center),
-                    ],
-                  ),
+                  itemBuilder: (context, index) {
+                    final pageSlide = onboardingSlides[index];
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(pageSlide.icon, style: const TextStyle(fontSize: 96)),
+                        const SizedBox(height: 24),
+                        Text(pageSlide.title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, color: AppColors.navy)),
+                        const SizedBox(height: 16),
+                        Text(pageSlide.description, textAlign: TextAlign.center),
+                      ],
+                    );
+                  },
                 ),
               ),
               Row(

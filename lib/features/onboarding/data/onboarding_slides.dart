@@ -1,6 +1,6 @@
 import 'package:ohok_flutter/core/models/onboarding_slide.dart';
 
-const onboardingSlides = [
+const List<OnboardingSlide> onboardingSlides = [
   OnboardingSlide(
     icon: '🫁',
     title: 'Welcome to CLOUD',
