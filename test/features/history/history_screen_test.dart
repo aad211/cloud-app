@@ -1,0 +1,272 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:ohok_flutter/core/models/analysis_record.dart';
+import 'package:ohok_flutter/core/storage/local_storage_service.dart';
+import 'package:ohok_flutter/features/history/presentation/history_screen.dart';
+
+import '../../test_helpers/fake_local_storage_service.dart';
+
+Widget _buildHistory({
+  required FakeLocalStorageService storage,
+  DateTime? now,
+}) {
+  return ProviderScope(
+    overrides: [localStorageServiceProvider.overrideWithValue(storage)],
+    child: MaterialApp(
+      home: HistoryScreen(now: now),
+    ),
+  );
+}
+
+void main() {
+  group('HistoryScreen – empty state', () {
+    testWidgets('shows No History Yet when there are no records',
+        (tester) async {
+      final storage = FakeLocalStorageService();
+
+      await tester.pumpWidget(_buildHistory(storage: storage));
+      await tester.pump();
+
+      expect(find.text('No History Yet'), findsOneWidget);
+    });
+
+    testWidgets('shows all three period filter chips', (tester) async {
+      final storage = FakeLocalStorageService();
+
+      await tester.pumpWidget(_buildHistory(storage: storage));
+      await tester.pump();
+
+      expect(find.text('All Time'), findsOneWidget);
+      expect(find.text('Last 7 Days'), findsOneWidget);
+      expect(find.text('Last 30 Days'), findsOneWidget);
+    });
+  });
+
+  group('HistoryScreen – with records', () {
+    FakeLocalStorageService storageWith(List<AnalysisRecord> records) {
+      final storage = FakeLocalStorageService()
+        ..history = records.map((r) => r.toJson()).toList();
+      return storage;
+    }
+
+    testWidgets('shows condition name for each record', (tester) async {
+      final storage = storageWith([
+        AnalysisRecord(
+          id: 'r1',
+          date: DateTime(2025, 6, 15, 14, 30),
+          condition: 'Asthma',
+          percentage: 87,
+        ),
+      ]);
+
+      await tester.pumpWidget(_buildHistory(storage: storage));
+      await tester.pump();
+
+      expect(find.text('Asthma'), findsOneWidget);
+    });
+
+    testWidgets('shows percentage for each record', (tester) async {
+      final storage = storageWith([
+        AnalysisRecord(
+          id: 'r1',
+          date: DateTime(2025, 6, 15, 14, 30),
+          condition: 'Asthma',
+          percentage: 87,
+        ),
+      ]);
+
+      await tester.pumpWidget(_buildHistory(storage: storage));
+      await tester.pump();
+
+      expect(find.text('87%'), findsOneWidget);
+    });
+
+    testWidgets('shows time in hh:mm a format', (tester) async {
+      final storage = storageWith([
+        AnalysisRecord(
+          id: 'r1',
+          date: DateTime(2025, 6, 15, 14, 30),
+          condition: 'Asthma',
+          percentage: 87,
+        ),
+      ]);
+
+      await tester.pumpWidget(_buildHistory(storage: storage));
+      await tester.pump();
+
+      expect(find.text('02:30 PM'), findsOneWidget);
+    });
+
+    testWidgets('shows date group heading', (tester) async {
+      final storage = storageWith([
+        AnalysisRecord(
+          id: 'r1',
+          date: DateTime(2025, 6, 15, 14, 30),
+          condition: 'Asthma',
+          percentage: 87,
+        ),
+      ]);
+
+      await tester.pumpWidget(_buildHistory(storage: storage));
+      await tester.pump();
+
+      expect(find.text('June 15, 2025'), findsOneWidget);
+    });
+
+    testWidgets('groups records under same heading when on same day',
+        (tester) async {
+      final storage = storageWith([
+        AnalysisRecord(
+          id: 'r1',
+          date: DateTime(2025, 6, 15, 9, 0),
+          condition: 'Asthma',
+          percentage: 87,
+        ),
+        AnalysisRecord(
+          id: 'r2',
+          date: DateTime(2025, 6, 15, 15, 0),
+          condition: 'Bronchitis',
+          percentage: 65,
+        ),
+      ]);
+
+      await tester.pumpWidget(_buildHistory(storage: storage));
+      await tester.pump();
+
+      // Only one date heading for both records
+      expect(find.text('June 15, 2025'), findsOneWidget);
+      expect(find.text('Asthma'), findsOneWidget);
+      expect(find.text('Bronchitis'), findsOneWidget);
+    });
+
+    testWidgets('shows separate headings for different days', (tester) async {
+      final storage = storageWith([
+        AnalysisRecord(
+          id: 'r1',
+          date: DateTime(2025, 6, 15, 9, 0),
+          condition: 'Asthma',
+          percentage: 87,
+        ),
+        AnalysisRecord(
+          id: 'r2',
+          date: DateTime(2025, 6, 16, 10, 0),
+          condition: 'Bronchitis',
+          percentage: 65,
+        ),
+      ]);
+
+      await tester.pumpWidget(_buildHistory(storage: storage));
+      await tester.pump();
+
+      expect(find.text('June 15, 2025'), findsOneWidget);
+      expect(find.text('June 16, 2025'), findsOneWidget);
+    });
+  });
+
+  group('HistoryScreen – period filters', () {
+    late DateTime now;
+    late FakeLocalStorageService storage;
+
+    setUp(() {
+      now = DateTime(2025, 6, 20, 12, 0);
+      storage = FakeLocalStorageService()
+        ..history = [
+          // 3 days ago – within 7 days and 30 days
+          AnalysisRecord(
+            id: 'recent',
+            date: DateTime(2025, 6, 17, 10, 0),
+            condition: 'Asthma',
+            percentage: 80,
+          ).toJson(),
+          // 10 days ago – within 30 days but NOT 7 days
+          AnalysisRecord(
+            id: 'mid',
+            date: DateTime(2025, 6, 10, 10, 0),
+            condition: 'Bronchitis',
+            percentage: 70,
+          ).toJson(),
+          // 40 days ago – outside 30 days
+          AnalysisRecord(
+            id: 'old',
+            date: DateTime(2025, 5, 11, 10, 0),
+            condition: 'COPD',
+            percentage: 60,
+          ).toJson(),
+        ];
+    });
+
+    testWidgets('All Time shows all records', (tester) async {
+      await tester.pumpWidget(_buildHistory(storage: storage, now: now));
+      await tester.pump();
+
+      expect(find.text('Asthma'), findsOneWidget);
+      expect(find.text('Bronchitis'), findsOneWidget);
+      expect(find.text('COPD'), findsOneWidget);
+    });
+
+    testWidgets('Last 7 Days shows only records within 7 days', (tester) async {
+      await tester.pumpWidget(_buildHistory(storage: storage, now: now));
+      await tester.pump();
+
+      await tester.tap(find.text('Last 7 Days'));
+      await tester.pump();
+
+      expect(find.text('Asthma'), findsOneWidget);
+      expect(find.text('Bronchitis'), findsNothing);
+      expect(find.text('COPD'), findsNothing);
+    });
+
+    testWidgets('Last 30 Days shows records within 30 days', (tester) async {
+      await tester.pumpWidget(_buildHistory(storage: storage, now: now));
+      await tester.pump();
+
+      await tester.tap(find.text('Last 30 Days'));
+      await tester.pump();
+
+      expect(find.text('Asthma'), findsOneWidget);
+      expect(find.text('Bronchitis'), findsOneWidget);
+      expect(find.text('COPD'), findsNothing);
+    });
+
+    testWidgets(
+        'switching from filtered view back to All Time restores all records',
+        (tester) async {
+      await tester.pumpWidget(_buildHistory(storage: storage, now: now));
+      await tester.pump();
+
+      await tester.tap(find.text('Last 7 Days'));
+      await tester.pump();
+
+      expect(find.text('COPD'), findsNothing);
+
+      await tester.tap(find.text('All Time'));
+      await tester.pump();
+
+      expect(find.text('COPD'), findsOneWidget);
+    });
+
+    testWidgets(
+        'filtered empty state shows No History Yet when no records match',
+        (tester) async {
+      final emptyStorage = FakeLocalStorageService()
+        ..history = [
+          // Only an old record
+          AnalysisRecord(
+            id: 'old',
+            date: DateTime(2025, 5, 11, 10, 0),
+            condition: 'COPD',
+            percentage: 60,
+          ).toJson(),
+        ];
+
+      await tester.pumpWidget(_buildHistory(storage: emptyStorage, now: now));
+      await tester.pump();
+
+      await tester.tap(find.text('Last 7 Days'));
+      await tester.pump();
+
+      expect(find.text('No History Yet'), findsOneWidget);
+    });
+  });
+}
