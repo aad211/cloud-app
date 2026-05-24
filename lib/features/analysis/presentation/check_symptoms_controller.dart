@@ -66,8 +66,10 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
 
     state = state.copyWith(errorMessage: '', buttonState: AnalysisButtonState.loading);
     await Future<void>.delayed(const Duration(milliseconds: 2500));
+    if (!mounted) return false;
     final record = _repository.buildRecord();
     await ref.read(analysisHistoryProvider.notifier).addRecord(record);
+    if (!mounted) return false;
     state = state.copyWith(buttonState: AnalysisButtonState.success);
     return true;
   }

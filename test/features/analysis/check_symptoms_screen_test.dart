@@ -206,4 +206,27 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Home'), findsOneWidget);
   });
+
+  testWidgets('stops analysis cleanly when leaving the screen',
+      (tester) async {
+    final storage = FakeLocalStorageService();
+
+    await tester.pumpWidget(_buildCheckSymptomsHarness(storage));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Tap to record your cough'));
+    await tester.pump(const Duration(seconds: 11));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Analyze Now'));
+    await tester.pump();
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Home'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 3));
+    expect(tester.takeException(), isNull);
+  });
 }
