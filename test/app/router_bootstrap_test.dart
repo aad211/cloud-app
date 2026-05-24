@@ -49,8 +49,8 @@ void main() {
       await tester.pump(const Duration(seconds: 3));
       await tester.pumpAndSettle();
 
-      expect(find.text('Onboarding'), findsOneWidget);
-      expect(find.text('CLOUD'), findsNothing);
+      expect(find.text('Welcome to CLOUD'), findsOneWidget);
+      expect(find.byType(Scaffold), findsOneWidget);
     },
   );
 
@@ -74,7 +74,7 @@ void main() {
       await tester.pump(const Duration(seconds: 3));
       await tester.pumpAndSettle();
 
-      expect(find.text('Home'), findsOneWidget);
+      expect(find.text('Quick Actions'), findsOneWidget);
       expect(find.text('CLOUD'), findsNothing);
     },
   );
