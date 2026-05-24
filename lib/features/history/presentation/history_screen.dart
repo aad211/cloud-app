@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:ohok_flutter/app/theme/app_colors.dart';
 import 'package:ohok_flutter/core/models/analysis_record.dart';
+import 'package:ohok_flutter/core/widgets/condition_visuals.dart';
+import 'package:ohok_flutter/core/widgets/parity_cards.dart';
+import 'package:ohok_flutter/core/widgets/parity_page_header.dart';
 import 'package:ohok_flutter/features/analysis/presentation/analysis_history_controller.dart';
 
 enum _HistoryPeriod {
@@ -31,6 +35,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   _HistoryPeriod _period = _HistoryPeriod.all;
 
   static final _dateFmt = DateFormat('MMMM d, y', 'en_US');
+  static final _timestampFmt = DateFormat('MMMM d, y, hh:mm a', 'en_US');
 
   DateTime get _now => widget.now ?? DateTime.now();
 
@@ -69,58 +74,74 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Symptom History',
-          style: TextStyle(color: AppColors.navy, fontWeight: FontWeight.w700),
-        ),
-        iconTheme: const IconThemeData(color: AppColors.navy),
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _PeriodFilterRow(
-            selected: _period,
-            onChanged: (p) => setState(() => _period = p),
-          ),
-          Expanded(
-            child: historyAsync.when(
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
-              error: (_, __) => const _ErrorState(),
-              data: (records) {
-                final filtered = _filter(records);
-                if (filtered.isEmpty) return const _EmptyState();
-                final groups = _group(filtered);
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 8),
-                  itemCount: groups.fold<int>(
-                      0, (sum, g) => sum + 1 + g.$2.length),
-                  itemBuilder: (context, index) {
-                    // Flatten groups into a list of widgets
-                    var cursor = 0;
-                    for (final (label, groupRecords) in groups) {
-                      if (index == cursor) {
-                        return _DateHeading(label: label);
-                      }
-                      cursor++;
-                      final localIndex = index - cursor;
-                      if (localIndex >= 0 &&
-                          localIndex < groupRecords.length) {
-                        return _RecordRow(record: groupRecords[localIndex]);
-                      }
-                      cursor += groupRecords.length;
-                    }
-                    return const SizedBox.shrink();
-                  },
-                );
-              },
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ParityPageHeader(
+              title: 'Symptom History',
+              subtitle: 'Track your respiratory health over time',
+              onBack: () => context.go('/home'),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              child: _PeriodFilterRow(
+                selected: _period,
+                onChanged: (p) => setState(() => _period = p),
+              ),
+            ),
+            Expanded(
+              child: historyAsync.when(
+                loading: () =>
+                    const Center(child: CircularProgressIndicator()),
+                error: (_, __) => const _ErrorState(),
+                data: (records) {
+                  final filtered = _filter(records);
+                  final groups = _group(filtered);
+
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (filtered.isNotEmpty) ...[
+                          Text(
+                            'All Records (${filtered.length})',
+                            style: const TextStyle(
+                              color: AppColors.blue,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          for (final (label, groupRecords) in groups) ...[
+                            _DateHeading(label: label),
+                            const SizedBox(height: 12),
+                            for (final record in groupRecords) ...[
+                              _RecordCard(
+                                record: record,
+                                timestampLabel: _timestampFmt.format(record.date),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                          ],
+                          _InsightsCard(recordCount: filtered.length),
+                          const SizedBox(height: 16),
+                        ] else ...[
+                          const _EmptyState(),
+                          const SizedBox(height: 16),
+                        ],
+                        const ParityDisclaimerCard(
+                          message:
+                              '⚠️ This is not a medical diagnosis. Please consult a healthcare professional.',
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -139,25 +160,66 @@ class _PeriodFilterRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: _HistoryPeriod.values.map((period) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(period.label),
-              selected: selected == period,
-              onSelected: (_) => onChanged(period),
-              selectedColor: AppColors.navy,
-              labelStyle: TextStyle(
-                color: selected == period ? Colors.white : AppColors.navy,
-                fontSize: 13,
-              ),
-            ),
-          );
-        }).toList(),
+    return Row(
+      children: [
+        Expanded(
+          child: _PeriodFilterButton(
+            label: _HistoryPeriod.all.label,
+            selected: selected == _HistoryPeriod.all,
+            onPressed: () => onChanged(_HistoryPeriod.all),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _PeriodFilterButton(
+            label: _HistoryPeriod.sevenDays.label,
+            selected: selected == _HistoryPeriod.sevenDays,
+            onPressed: () => onChanged(_HistoryPeriod.sevenDays),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _PeriodFilterButton(
+            label: _HistoryPeriod.thirtyDays.label,
+            selected: selected == _HistoryPeriod.thirtyDays,
+            onPressed: () => onChanged(_HistoryPeriod.thirtyDays),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PeriodFilterButton extends StatelessWidget {
+  const _PeriodFilterButton({
+    required this.label,
+    required this.selected,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 44,
+      child: TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          backgroundColor: selected ? AppColors.navy : AppColors.sand,
+          foregroundColor: selected ? Colors.white : AppColors.blue,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 13),
+        ),
       ),
     );
   }
@@ -170,56 +232,104 @@ class _DateHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 6),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: AppColors.navy,
-          fontWeight: FontWeight.w700,
-          fontSize: 14,
-        ),
+    return Text(
+      label,
+      style: const TextStyle(
+        color: AppColors.blue,
+        fontWeight: FontWeight.w500,
+        fontSize: 14,
       ),
     );
   }
 }
 
-class _RecordRow extends StatelessWidget {
-  const _RecordRow({required this.record});
+class _RecordCard extends StatelessWidget {
+  const _RecordCard({required this.record, required this.timestampLabel});
 
   final AnalysisRecord record;
-
-  static final _timeFmt = DateFormat('hh:mm a', 'en_US');
+  final String timestampLabel;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 0,
-      color: const Color(0xFFF5F7FA),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        title: Text(
-          record.condition,
-          style: const TextStyle(
-            color: AppColors.navy,
-            fontWeight: FontWeight.w600,
+    final visuals = conditionVisualsFor(record.condition);
+
+    return ParityGradientCard(
+      child: Column(
+        children: [
+          Text(visuals.emoji, style: const TextStyle(fontSize: 48)),
+          const SizedBox(height: 8),
+          Text(
+            record.condition,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-        ),
-        subtitle: Text(
-          _timeFmt.format(record.date),
-          style: const TextStyle(color: Colors.grey, fontSize: 12),
-        ),
-        trailing: Text(
-          '${record.percentage}%',
-          style: const TextStyle(
-            color: AppColors.blue,
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: visuals.color.withValues(alpha: 0.35),
+              ),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'Confidence',
+                  style: TextStyle(
+                    color: Color(0xB3FFFFFF),
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${record.percentage}%',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+          const SizedBox(height: 24),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.only(top: 12),
+            decoration: const BoxDecoration(
+              border: Border(
+                top: BorderSide(color: Color(0x33FFFFFF)),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.calendar_today,
+                  size: 14,
+                  color: Color(0xB3FFFFFF),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    timestampLabel,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xB3FFFFFF),
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -230,14 +340,76 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'No History Yet',
-        style: TextStyle(
-          color: AppColors.navy,
-          fontSize: 18,
-          fontWeight: FontWeight.w500,
-        ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Column(
+        children: [
+          Text('📋', style: TextStyle(fontSize: 48)),
+          SizedBox(height: 12),
+          Text(
+            'No History Yet',
+            style: TextStyle(
+              color: AppColors.navy,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Start checking your symptoms to build your health history',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.blue,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InsightsCard extends StatelessWidget {
+  const _InsightsCard({required this.recordCount});
+
+  final int recordCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return ParityInfoCard(
+      leading: const SizedBox.shrink(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '💡 Health Insights',
+            style: TextStyle(
+              color: AppColors.navy,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "• You've completed $recordCount ${recordCount == 1 ? 'analysis' : 'analyses'}",
+            style: const TextStyle(color: AppColors.blue, fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '• Regular monitoring helps track respiratory health changes',
+            style: TextStyle(color: AppColors.blue, fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '• Consult a healthcare professional if symptoms persist',
+            style: TextStyle(color: AppColors.blue, fontSize: 14),
+          ),
+        ],
       ),
     );
   }

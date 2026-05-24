@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ohok_flutter/core/models/analysis_record.dart';
 import 'package:ohok_flutter/core/storage/local_storage_service.dart';
 import 'package:ohok_flutter/features/history/presentation/history_screen.dart';
@@ -19,6 +20,34 @@ Widget _buildHistory({
   );
 }
 
+Widget _buildHistoryRouter({
+  required FakeLocalStorageService storage,
+  DateTime? now,
+}) {
+  final router = GoRouter(
+    initialLocation: '/history',
+    routes: [
+      GoRoute(
+        path: '/history',
+        builder: (_, __) => ProviderScope(
+          overrides: [localStorageServiceProvider.overrideWithValue(storage)],
+          child: HistoryScreen(now: now),
+        ),
+      ),
+      GoRoute(
+        path: '/home',
+        builder: (_, __) =>
+            const Scaffold(body: Center(child: Text('Home Destination'))),
+      ),
+    ],
+  );
+
+  return ProviderScope(
+    overrides: [localStorageServiceProvider.overrideWithValue(storage)],
+    child: MaterialApp.router(routerConfig: router),
+  );
+}
+
 void main() {
   group('HistoryScreen – empty state', () {
     testWidgets('shows No History Yet when there are no records',
@@ -29,6 +58,22 @@ void main() {
       await tester.pump();
 
       expect(find.text('No History Yet'), findsOneWidget);
+    });
+
+    testWidgets('shows the React empty state visuals and copy', (tester) async {
+      final storage = FakeLocalStorageService();
+
+      await tester.pumpWidget(_buildHistory(storage: storage));
+      await tester.pump();
+
+      expect(find.text('📋'), findsOneWidget);
+      expect(find.text('No History Yet'), findsOneWidget);
+      expect(
+        find.text(
+          'Start checking your symptoms to build your health history',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('shows all three period filter chips', (tester) async {
@@ -108,7 +153,7 @@ void main() {
       await tester.pumpWidget(_buildHistory(storage: storage));
       await tester.pump();
 
-      expect(find.text('02:30 PM'), findsOneWidget);
+      expect(find.text('June 15, 2025, 02:30 PM'), findsOneWidget);
     });
 
     testWidgets('shows date group heading', (tester) async {
@@ -200,6 +245,54 @@ void main() {
       final olderHeading = tester.getTopLeft(find.text('June 15, 2025'));
 
       expect(newerHeading.dy, lessThan(olderHeading.dy));
+    });
+
+    testWidgets('renders the React parity subtitle, cards, insights and disclaimer',
+        (tester) async {
+      final storage = storageWith([
+        AnalysisRecord(
+          id: 'r1',
+          date: DateTime(2025, 6, 15, 14, 30),
+          condition: 'Asthma',
+          percentage: 87,
+        ),
+      ]);
+
+      await tester.pumpWidget(_buildHistory(storage: storage));
+      await tester.pump();
+
+      expect(
+        find.text('Track your respiratory health over time'),
+        findsOneWidget,
+      );
+      expect(find.text('All Records (1)'), findsOneWidget);
+      expect(find.text('🫁'), findsOneWidget);
+      expect(find.text('💡 Health Insights'), findsOneWidget);
+      expect(
+        find.text(
+          '⚠️ This is not a medical diagnosis. Please consult a healthcare professional.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('back button routes home', (tester) async {
+      final storage = storageWith([
+        AnalysisRecord(
+          id: 'r1',
+          date: DateTime(2025, 6, 15, 14, 30),
+          condition: 'Asthma',
+          percentage: 87,
+        ),
+      ]);
+
+      await tester.pumpWidget(_buildHistoryRouter(storage: storage));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Home Destination'), findsOneWidget);
     });
   });
 
