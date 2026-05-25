@@ -70,4 +70,28 @@ void main() {
       );
     }
   });
+
+  test('AnalysisRecord wraps malformed probability maps with entry index', () {
+    expect(
+      () => AnalysisRecord.fromJson({
+        'id': 'broken-2',
+        'date': '2026-05-25T12:00:00.000',
+        'condition': 'Bronchitis',
+        'percentage': 65,
+        'probabilities': [
+          {
+            'percentage': 65,
+            'hexColor': 0xFF547792,
+          },
+        ],
+      }),
+      throwsA(
+        isA<FormatException>().having(
+          (error) => error.message,
+          'message',
+          'Analysis record has an invalid probability entry at index 0.',
+        ),
+      ),
+    );
+  });
 }

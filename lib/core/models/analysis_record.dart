@@ -84,6 +84,10 @@ class AnalysisRecord {
                   return ConditionProbability.fromJson(
                     Map<String, dynamic>.from(rawProbability),
                   );
+                } on FormatException catch (_) {
+                  throw FormatException(
+                    'Analysis record has an invalid probability entry at index $index.',
+                  );
                 } on TypeError {
                   throw FormatException(
                     'Analysis record has an invalid probability entry at index $index.',
