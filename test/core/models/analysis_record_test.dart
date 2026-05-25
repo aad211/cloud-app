@@ -49,4 +49,25 @@ void main() {
     expect(decoded.repoMirrorPath, 'analysis_outputs/real-1.png');
     expect(decoded.storageBackend, 'native');
   });
+
+  test('AnalysisRecord rejects malformed probability entries', () {
+    for (final invalidEntry in ['bad', 42, null]) {
+      expect(
+        () => AnalysisRecord.fromJson({
+          'id': 'broken-1',
+          'date': '2026-05-25T12:00:00.000',
+          'condition': 'Bronchitis',
+          'percentage': 65,
+          'probabilities': [invalidEntry],
+        }),
+        throwsA(
+          isA<FormatException>().having(
+            (error) => error.message,
+            'message',
+            'Analysis record has an invalid probability entry at index 0.',
+          ),
+        ),
+      );
+    }
+  });
 }

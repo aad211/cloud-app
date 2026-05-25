@@ -70,13 +70,26 @@ class AnalysisRecord {
     final rawProbabilities = json['probabilities'];
     final parsedProbabilities =
         rawProbabilities is List
-            ? rawProbabilities
-                .map(
-                  (entry) => ConditionProbability.fromJson(
-                    Map<String, dynamic>.from(entry as Map),
-                  ),
-                )
-                .toList(growable: false)
+            ? rawProbabilities.indexed.map((entry) {
+                final index = entry.$1;
+                final rawProbability = entry.$2;
+
+                if (rawProbability is! Map) {
+                  throw FormatException(
+                    'Analysis record has an invalid probability entry at index $index.',
+                  );
+                }
+
+                try {
+                  return ConditionProbability.fromJson(
+                    Map<String, dynamic>.from(rawProbability),
+                  );
+                } on TypeError {
+                  throw FormatException(
+                    'Analysis record has an invalid probability entry at index $index.',
+                  );
+                }
+              }).toList(growable: false)
             : const <ConditionProbability>[];
 
     final audioFilePath = json['audioFilePath'];
