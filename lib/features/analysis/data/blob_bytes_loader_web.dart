@@ -8,7 +8,7 @@ Future<Uint8List> loadNativeBytes(String path) {
 }
 
 Future<Uint8List> loadBlobBytes(String blobUrl) async {
-  final response = await web.window.fetch(blobUrl).toDart;
+  final response = await web.window.fetch(blobUrl.toJS).toDart;
   final buffer = await response.arrayBuffer().toDart;
   return Uint8List.view(buffer.toDart);
 }
