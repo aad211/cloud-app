@@ -52,6 +52,10 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
   Timer? _errorTimer;
 
   void toggleMockRecording() {
+    if (state.buttonState != AnalysisButtonState.idle) {
+      return;
+    }
+
     _clearMissingRecordingError();
 
     if (state.isRecording) {
