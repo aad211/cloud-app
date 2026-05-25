@@ -21,17 +21,13 @@ Widget _buildCheckSymptomsHarness(
       ),
       GoRoute(
         path: '/home',
-        builder: (_, __) =>
-            const Scaffold(body: Center(child: Text('Home'))),
+        builder: (_, __) => const Scaffold(body: Center(child: Text('Home'))),
       ),
-      GoRoute(
-        path: '/result',
-        builder: (_, __) => const ResultScreen(),
-      ),
+      GoRoute(path: '/result', builder: (_, __) => const ResultScreen()),
       GoRoute(
         path: '/hospitals',
-        builder: (_, __) =>
-            const Scaffold(body: Center(child: Text('Hospitals'))),
+        builder:
+            (_, __) => const Scaffold(body: Center(child: Text('Hospitals'))),
       ),
     ],
   );
@@ -52,8 +48,9 @@ void _setPhoneViewport(WidgetTester tester) {
 }
 
 void main() {
-  testWidgets('shows parity subtitle and AI classification info copy',
-      (tester) async {
+  testWidgets('shows parity subtitle and AI classification info copy', (
+    tester,
+  ) async {
     final storage = FakeLocalStorageService();
     _setPhoneViewport(tester);
 
@@ -68,48 +65,46 @@ void main() {
     expect(find.text('⚠️ Not a medical diagnosis'), findsOneWidget);
   });
 
-  testWidgets('tapping record again stops recording early and marks it recorded',
-      (tester) async {
+  testWidgets(
+    'tapping record again stops recording early and marks it recorded',
+    (tester) async {
+      final storage = FakeLocalStorageService();
+      _setPhoneViewport(tester);
+
+      await tester.pumpWidget(_buildCheckSymptomsHarness(storage));
+      await tester.pumpAndSettle();
+
+      final recordButton = _recordButton();
+
+      await tester.tap(recordButton);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 2));
+
+      await tester.tap(recordButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Cough recorded ✓'), findsOneWidget);
+      expect(find.text('Click analyze to continue'), findsOneWidget);
+      expect(find.text('Recording...'), findsNothing);
+    },
+  );
+
+  testWidgets('disables Analyze Now before a recording exists', (tester) async {
     final storage = FakeLocalStorageService();
     _setPhoneViewport(tester);
 
     await tester.pumpWidget(_buildCheckSymptomsHarness(storage));
     await tester.pumpAndSettle();
 
-    final recordButton = _recordButton();
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Analyze Now'),
+    );
 
-    await tester.tap(recordButton);
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 2));
-
-    await tester.tap(recordButton);
-    await tester.pumpAndSettle();
-
-    expect(find.text('Cough recorded ✓'), findsOneWidget);
-    expect(find.text('Click analyze to continue'), findsOneWidget);
-    expect(find.text('Recording...'), findsNothing);
-  });
-
-  testWidgets('missing-recording error clears after 3 seconds', (tester) async {
-    final storage = FakeLocalStorageService();
-    _setPhoneViewport(tester);
-
-    await tester.pumpWidget(_buildCheckSymptomsHarness(storage));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Analyze Now'));
-    await tester.pump();
-
-    expect(find.text('⚠️ Please record your cough first'), findsOneWidget);
-
-    await tester.pump(const Duration(seconds: 3));
-    await tester.pumpAndSettle();
-
+    expect(button.onPressed, isNull);
     expect(find.text('⚠️ Please record your cough first'), findsNothing);
   });
 
-  testWidgets('analyze requires recording and saves a mocked result',
-      (tester) async {
+  testWidgets('analyze after recording saves a mocked result', (tester) async {
     final storage = FakeLocalStorageService();
     _setPhoneViewport(tester);
     storage.hasCompletedOnboarding = true; // must be set before guard init
@@ -127,10 +122,6 @@ void main() {
     await tester.tap(find.text('Check Symptoms'));
     await tester.pumpAndSettle();
 
-     await tester.tap(find.text('Analyze Now'));
-     await tester.pumpAndSettle();
-    expect(find.text('⚠️ Please record your cough first'), findsOneWidget);
-
     await tester.tap(_recordButton());
     await tester.pump();
     await tester.pump(const Duration(seconds: 11));
@@ -144,8 +135,9 @@ void main() {
     expect(storage.history, isNotEmpty);
   });
 
-  testWidgets('stops mock recording cleanly when leaving the screen',
-      (tester) async {
+  testWidgets('stops mock recording cleanly when leaving the screen', (
+    tester,
+  ) async {
     final storage = FakeLocalStorageService();
     _setPhoneViewport(tester);
 
@@ -164,8 +156,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('ignores repeated Analyze Now taps after recording',
-      (tester) async {
+  testWidgets('ignores repeated Analyze Now taps after recording', (
+    tester,
+  ) async {
     final storage = FakeLocalStorageService();
     _setPhoneViewport(tester);
 
@@ -186,8 +179,9 @@ void main() {
     expect(find.text('Analysis Result'), findsOneWidget);
   });
 
-  testWidgets('disables Analyze Now while recording is in progress',
-      (tester) async {
+  testWidgets('disables Analyze Now while recording is in progress', (
+    tester,
+  ) async {
     final storage = FakeLocalStorageService();
     _setPhoneViewport(tester);
 
@@ -208,29 +202,31 @@ void main() {
   });
 
   testWidgets(
-      'shows recording progress and ends in a recorded state after 10 seconds',
-      (tester) async {
-    final storage = FakeLocalStorageService();
-    _setPhoneViewport(tester);
+    'shows recording progress and ends in a recorded state after 10 seconds',
+    (tester) async {
+      final storage = FakeLocalStorageService();
+      _setPhoneViewport(tester);
 
-    await tester.pumpWidget(_buildCheckSymptomsHarness(storage));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(_buildCheckSymptomsHarness(storage));
+      await tester.pumpAndSettle();
 
-    await tester.tap(_recordButton());
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 1));
+      await tester.tap(_recordButton());
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
 
-    expect(find.text('00:01'), findsOneWidget);
+      expect(find.text('00:01'), findsOneWidget);
 
-    await tester.pump(const Duration(seconds: 10));
-    await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 10));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Cough recorded ✓'), findsOneWidget);
-    expect(find.text('00:01'), findsNothing);
-  });
+      expect(find.text('Cough recorded ✓'), findsOneWidget);
+      expect(find.text('00:01'), findsNothing);
+    },
+  );
 
-  testWidgets('shows Analyzing state before navigating to result',
-      (tester) async {
+  testWidgets('shows Analyzing state before navigating to result', (
+    tester,
+  ) async {
     final storage = FakeLocalStorageService();
     _setPhoneViewport(tester);
 
@@ -252,8 +248,9 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('shows success state for 1 second before navigating to result',
-      (tester) async {
+  testWidgets('shows success state for 1 second before navigating to result', (
+    tester,
+  ) async {
     final storage = FakeLocalStorageService();
     _setPhoneViewport(tester);
 
@@ -282,8 +279,9 @@ void main() {
     expect(find.text('Analysis Result'), findsOneWidget);
   });
 
-  testWidgets('disables recording during success delay before navigation',
-      (tester) async {
+  testWidgets('disables recording during success delay before navigation', (
+    tester,
+  ) async {
     final storage = FakeLocalStorageService();
     _setPhoneViewport(tester);
 
@@ -317,45 +315,49 @@ void main() {
     expect(find.text('Analysis Result'), findsOneWidget);
   });
 
-  testWidgets('result screen shows mocked probabilities and both CTAs navigate',
-      (tester) async {
-    final storage = FakeLocalStorageService();
-    _setPhoneViewport(tester);
+  testWidgets(
+    'result screen shows mocked probabilities and both CTAs navigate',
+    (tester) async {
+      final storage = FakeLocalStorageService();
+      _setPhoneViewport(tester);
 
-    await tester.pumpWidget(
-      _buildCheckSymptomsHarness(storage, initialLocation: '/result'),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        _buildCheckSymptomsHarness(storage, initialLocation: '/result'),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('Analysis Result'), findsOneWidget);
-    expect(find.text('Healthy'), findsOneWidget);
-    expect(find.text('Asthma'), findsOneWidget);
-    expect(find.text('Pneumonia'), findsOneWidget);
-    expect(find.text('COVID-19'), findsOneWidget);
-    expect(find.text('Lung Cancer'), findsOneWidget);
+      expect(find.text('Analysis Result'), findsOneWidget);
+      expect(find.text('Healthy'), findsOneWidget);
+      expect(find.text('Asthma'), findsOneWidget);
+      expect(find.text('Pneumonia'), findsOneWidget);
+      expect(find.text('COVID-19'), findsOneWidget);
+      expect(find.text('Lung Cancer'), findsOneWidget);
 
-    final hospitalCta = find.widgetWithText(FilledButton, 'Find Nearby Hospital');
-    await tester.ensureVisible(hospitalCta);
-    await tester.pumpAndSettle();
-    await tester.tap(hospitalCta);
-    await tester.pumpAndSettle();
-    expect(find.text('Hospitals'), findsOneWidget);
+      final hospitalCta = find.widgetWithText(
+        FilledButton,
+        'Find Nearby Hospital',
+      );
+      await tester.ensureVisible(hospitalCta);
+      await tester.pumpAndSettle();
+      await tester.tap(hospitalCta);
+      await tester.pumpAndSettle();
+      expect(find.text('Hospitals'), findsOneWidget);
 
-    await tester.pumpWidget(
-      _buildCheckSymptomsHarness(storage, initialLocation: '/result'),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        _buildCheckSymptomsHarness(storage, initialLocation: '/result'),
+      );
+      await tester.pumpAndSettle();
 
-    final homeCta = find.widgetWithText(FilledButton, 'Back to Home');
-    await tester.ensureVisible(homeCta);
-    await tester.pumpAndSettle();
-    await tester.tap(homeCta);
-    await tester.pumpAndSettle();
-    expect(find.text('Home'), findsOneWidget);
-  });
+      final homeCta = find.widgetWithText(FilledButton, 'Back to Home');
+      await tester.ensureVisible(homeCta);
+      await tester.pumpAndSettle();
+      await tester.tap(homeCta);
+      await tester.pumpAndSettle();
+      expect(find.text('Home'), findsOneWidget);
+    },
+  );
 
-  testWidgets('stops analysis cleanly when leaving the screen',
-      (tester) async {
+  testWidgets('stops analysis cleanly when leaving the screen', (tester) async {
     final storage = FakeLocalStorageService();
     _setPhoneViewport(tester);
 
@@ -382,17 +384,18 @@ void main() {
   testWidgets(
     'shows error and stays on screen when history save fails, then allows retry',
     (tester) async {
-      final storage = FakeLocalStorageService()
-        ..historySaveException = Exception('disk full');
+      final storage =
+          FakeLocalStorageService()
+            ..historySaveException = Exception('disk full');
       _setPhoneViewport(tester);
 
       await tester.pumpWidget(_buildCheckSymptomsHarness(storage));
       await tester.pumpAndSettle();
 
-    await tester.tap(_recordButton());
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 11));
-    await tester.pumpAndSettle();
+      await tester.tap(_recordButton());
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 11));
+      await tester.pumpAndSettle();
       expect(find.text('Cough recorded ✓'), findsOneWidget);
 
       await tester.tap(find.text('Analyze Now'));

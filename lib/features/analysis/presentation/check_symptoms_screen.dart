@@ -9,17 +9,29 @@ import 'check_symptoms_controller.dart';
 class CheckSymptomsScreen extends ConsumerWidget {
   const CheckSymptomsScreen({super.key});
 
-  static const _waveformHeights = [22.0, 36.0, 28.0, 44.0, 30.0, 40.0, 26.0, 34.0];
+  static const _waveformHeights = [
+    22.0,
+    36.0,
+    28.0,
+    44.0,
+    30.0,
+    40.0,
+    26.0,
+    34.0,
+  ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(checkSymptomsControllerProvider);
     final controller = ref.read(checkSymptomsControllerProvider.notifier);
     final canAnalyze =
-        !state.isRecording && state.buttonState == AnalysisButtonState.idle;
-    final recordButtonColor = state.isRecording
-        ? AppColors.danger
-        : state.hasRecording
+        state.hasRecording &&
+        !state.isRecording &&
+        state.buttonState == AnalysisButtonState.idle;
+    final recordButtonColor =
+        state.isRecording
+            ? AppColors.danger
+            : state.hasRecording
             ? AppColors.success
             : AppColors.gold;
     final analyzeButtonColor = switch (state.buttonState) {
@@ -63,9 +75,10 @@ class CheckSymptomsScreen extends ConsumerWidget {
                       child: Column(
                         children: [
                           FilledButton(
-                            onPressed: state.buttonState == AnalysisButtonState.idle
-                                ? controller.toggleMockRecording
-                                : null,
+                            onPressed:
+                                state.buttonState == AnalysisButtonState.idle
+                                    ? controller.toggleMockRecording
+                                    : null,
                             style: FilledButton.styleFrom(
                               backgroundColor: recordButtonColor,
                               disabledBackgroundColor: recordButtonColor,
@@ -78,9 +91,10 @@ class CheckSymptomsScreen extends ConsumerWidget {
                               state.isRecording
                                   ? Icons.stop_rounded
                                   : Icons.mic_rounded,
-                              color: state.hasRecording || state.isRecording
-                                  ? Colors.white
-                                  : AppColors.navy,
+                              color:
+                                  state.hasRecording || state.isRecording
+                                      ? Colors.white
+                                      : AppColors.navy,
                               size: 40,
                             ),
                           ),
@@ -116,7 +130,9 @@ class CheckSymptomsScreen extends ConsumerWidget {
                                       height: height,
                                       decoration: BoxDecoration(
                                         color: AppColors.danger,
-                                        borderRadius: BorderRadius.circular(999),
+                                        borderRadius: BorderRadius.circular(
+                                          999,
+                                        ),
                                       ),
                                     ),
                                     if (height != _waveformHeights.last)
@@ -215,18 +231,21 @@ class CheckSymptomsScreen extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
               child: FilledButton(
-                onPressed: canAnalyze
-                    ? () async {
-                        final success = await controller.analyze();
-                        if (!context.mounted || !success) {
-                          return;
+                onPressed:
+                    canAnalyze
+                        ? () async {
+                          final success = await controller.analyze();
+                          if (!context.mounted || !success) {
+                            return;
+                          }
+                          await Future<void>.delayed(
+                            const Duration(seconds: 1),
+                          );
+                          if (context.mounted) {
+                            context.go('/result');
+                          }
                         }
-                        await Future<void>.delayed(const Duration(seconds: 1));
-                        if (context.mounted) {
-                          context.go('/result');
-                        }
-                      }
-                    : null,
+                        : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: analyzeButtonColor,
                   disabledBackgroundColor: AppColors.muted,
@@ -255,13 +274,11 @@ class CheckSymptomsScreen extends ConsumerWidget {
                       else
                         const Icon(Icons.check_rounded, size: 18),
                       const SizedBox(width: 8),
-                      Text(
-                        switch (state.buttonState) {
-                          AnalysisButtonState.idle => 'Analyze Now',
-                          AnalysisButtonState.loading => 'Analyzing...',
-                          AnalysisButtonState.success => 'Analysis Complete ✓',
-                        },
-                      ),
+                      Text(switch (state.buttonState) {
+                        AnalysisButtonState.idle => 'Analyze Now',
+                        AnalysisButtonState.loading => 'Analyzing...',
+                        AnalysisButtonState.success => 'Analysis Complete ✓',
+                      }),
                     ],
                   ),
                 ),
