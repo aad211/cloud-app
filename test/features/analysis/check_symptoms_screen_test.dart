@@ -282,6 +282,41 @@ void main() {
     expect(find.text('Analysis Result'), findsOneWidget);
   });
 
+  testWidgets('disables recording during success delay before navigation',
+      (tester) async {
+    final storage = FakeLocalStorageService();
+    _setPhoneViewport(tester);
+
+    await tester.pumpWidget(_buildCheckSymptomsHarness(storage));
+    await tester.pumpAndSettle();
+
+    await tester.tap(_recordButton());
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 11));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Analyze Now'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 2500));
+    await tester.pump();
+
+    expect(find.text('Analysis Complete ✓'), findsOneWidget);
+
+    final recordButton = tester.widget<FilledButton>(_recordButton());
+    expect(recordButton.onPressed, isNull);
+
+    await tester.tap(_recordButton());
+    await tester.pump();
+
+    expect(find.text('Recording...'), findsNothing);
+    expect(find.text('00:01'), findsNothing);
+
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Analysis Result'), findsOneWidget);
+  });
+
   testWidgets('result screen shows mocked probabilities and both CTAs navigate',
       (tester) async {
     final storage = FakeLocalStorageService();
