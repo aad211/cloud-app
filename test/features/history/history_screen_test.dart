@@ -349,6 +349,27 @@ void main() {
       expect(find.text('COPD'), findsNothing);
     });
 
+    testWidgets('Last 7 Days includes records exactly 7 days old',
+        (tester) async {
+      final boundaryStorage = FakeLocalStorageService()
+        ..history = [
+          AnalysisRecord(
+            id: 'boundary-7',
+            date: DateTime(2025, 6, 13, 12, 0),
+            condition: 'Boundary Asthma',
+            percentage: 81,
+          ).toJson(),
+        ];
+
+      await tester.pumpWidget(_buildHistory(storage: boundaryStorage, now: now));
+      await tester.pump();
+
+      await tester.tap(find.text('Last 7 Days'));
+      await tester.pump();
+
+      expect(find.text('Boundary Asthma'), findsOneWidget);
+    });
+
     testWidgets('Last 7 Days excludes future-dated records', (tester) async {
       final futureStorage = FakeLocalStorageService()
         ..history = [
@@ -386,6 +407,27 @@ void main() {
       expect(find.text('Asthma'), findsOneWidget);
       expect(find.text('Bronchitis'), findsOneWidget);
       expect(find.text('COPD'), findsNothing);
+    });
+
+    testWidgets('Last 30 Days includes records exactly 30 days old',
+        (tester) async {
+      final boundaryStorage = FakeLocalStorageService()
+        ..history = [
+          AnalysisRecord(
+            id: 'boundary-30',
+            date: DateTime(2025, 5, 21, 12, 0),
+            condition: 'Boundary COPD',
+            percentage: 61,
+          ).toJson(),
+        ];
+
+      await tester.pumpWidget(_buildHistory(storage: boundaryStorage, now: now));
+      await tester.pump();
+
+      await tester.tap(find.text('Last 30 Days'));
+      await tester.pump();
+
+      expect(find.text('Boundary COPD'), findsOneWidget);
     });
 
     testWidgets(

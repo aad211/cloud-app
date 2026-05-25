@@ -41,7 +41,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   bool _isWithinPastDays(AnalysisRecord record, int days) {
     final cutoff = _now.subtract(Duration(days: days));
-    return !record.date.isAfter(_now) && record.date.isAfter(cutoff);
+    return !record.date.isAfter(_now) && !record.date.isBefore(cutoff);
   }
 
   List<AnalysisRecord> _filter(List<AnalysisRecord> records) {
