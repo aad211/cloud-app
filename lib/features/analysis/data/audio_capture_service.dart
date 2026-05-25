@@ -8,8 +8,6 @@ import 'package:record/record.dart';
 
 import 'blob_bytes_loader_stub.dart'
     if (dart.library.js_interop) 'blob_bytes_loader_web.dart';
-import 'native_bytes_loader_stub.dart'
-    if (dart.library.io) 'native_bytes_loader_io.dart';
 
 class AudioCaptureService {
   AudioCaptureService({
