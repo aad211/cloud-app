@@ -4,21 +4,16 @@ import 'package:ohok_flutter/app/theme/app_colors.dart';
 import 'package:ohok_flutter/core/models/condition_probability.dart';
 import 'package:ohok_flutter/core/widgets/parity_cards.dart';
 import 'package:ohok_flutter/core/widgets/parity_page_header.dart';
-import 'package:ohok_flutter/features/analysis/data/mock_analysis_repository.dart';
+import 'package:ohok_flutter/features/result/presentation/result_summary.dart';
 
 class ResultScreen extends StatelessWidget {
   const ResultScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final record = const MockAnalysisRepository().buildRecord();
-    final items = const MockAnalysisRepository().probabilities();
-    final mainCondition = items.first;
-    final riskText = mainCondition.percentage >= 60
-        ? 'Medium Risk'
-        : mainCondition.percentage >= 30
-            ? 'Low Risk'
-            : 'High Risk';
+    final summary = buildResultSummary();
+    final record = summary.record;
+    final items = summary.probabilities;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -39,14 +34,14 @@ class ResultScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        _RiskBadge(text: riskText),
+                        _RiskBadge(
+                          text: summary.riskLabel,
+                          color: summary.riskColor,
+                        ),
                         const SizedBox(height: 20),
                         const Text(
                           'Most Likely',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                          ),
+                          style: TextStyle(color: Colors.white70, fontSize: 14),
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -188,9 +183,10 @@ class ResultScreen extends StatelessWidget {
 }
 
 class _RiskBadge extends StatelessWidget {
-  const _RiskBadge({required this.text});
+  const _RiskBadge({required this.text, required this.color});
 
   final String text;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -199,13 +195,17 @@ class _RiskBadge extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: AppColors.gold,
+          color: color,
           borderRadius: BorderRadius.circular(999),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 16),
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.white,
+              size: 16,
+            ),
             const SizedBox(width: 6),
             Text(
               text,
@@ -311,11 +311,7 @@ class _BulletPoint extends StatelessWidget {
         children: [
           const Text(
             '•',
-            style: TextStyle(
-              color: AppColors.blue,
-              fontSize: 18,
-              height: 1.2,
-            ),
+            style: TextStyle(color: AppColors.blue, fontSize: 18, height: 1.2),
           ),
           const SizedBox(width: 8),
           Expanded(

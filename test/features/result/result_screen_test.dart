@@ -7,19 +7,19 @@ Widget _buildHarness() {
   final router = GoRouter(
     initialLocation: '/result',
     routes: [
-      GoRoute(
-        path: '/result',
-        builder: (_, __) => const ResultScreen(),
-      ),
+      GoRoute(path: '/result', builder: (_, __) => const ResultScreen()),
       GoRoute(
         path: '/home',
-        builder: (_, __) =>
-            const Scaffold(body: Center(child: Text('Home Destination'))),
+        builder:
+            (_, __) =>
+                const Scaffold(body: Center(child: Text('Home Destination'))),
       ),
       GoRoute(
         path: '/hospitals',
-        builder: (_, __) =>
-            const Scaffold(body: Center(child: Text('Hospitals Destination'))),
+        builder:
+            (_, __) => const Scaffold(
+              body: Center(child: Text('Hospitals Destination')),
+            ),
       ),
     ],
   );
@@ -47,23 +47,28 @@ void main() {
     );
   });
 
-  testWidgets('routes home from the header back button and hospitals from CTA',
-      (tester) async {
-    await tester.pumpWidget(_buildHarness());
-    await tester.pumpAndSettle();
+  testWidgets(
+    'routes home from the header back button and hospitals from CTA',
+    (tester) async {
+      await tester.pumpWidget(_buildHarness());
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.arrow_back));
-    await tester.pumpAndSettle();
-    expect(find.text('Home Destination'), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+      expect(find.text('Home Destination'), findsOneWidget);
 
-    await tester.pumpWidget(_buildHarness());
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(_buildHarness());
+      await tester.pumpAndSettle();
 
-    final hospitalCta = find.widgetWithText(FilledButton, 'Find Nearby Hospital');
-    await tester.ensureVisible(hospitalCta);
-    await tester.pumpAndSettle();
-    await tester.tap(hospitalCta);
-    await tester.pumpAndSettle();
-    expect(find.text('Hospitals Destination'), findsOneWidget);
-  });
+      final hospitalCta = find.widgetWithText(
+        FilledButton,
+        'Find Nearby Hospital',
+      );
+      await tester.ensureVisible(hospitalCta);
+      await tester.pumpAndSettle();
+      await tester.tap(hospitalCta);
+      await tester.pumpAndSettle();
+      expect(find.text('Hospitals Destination'), findsOneWidget);
+    },
+  );
 }
