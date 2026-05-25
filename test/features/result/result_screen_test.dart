@@ -37,6 +37,7 @@ void main() {
     expect(find.text('Medium Risk'), findsOneWidget);
     expect(find.text('Probability Breakdown'), findsOneWidget);
     expect(find.text('What you should do'), findsOneWidget);
+    expect(find.text('Consult a doctor if symptoms persist'), findsOneWidget);
     expect(find.text('Find Nearby Hospital'), findsOneWidget);
     expect(find.text('Back to Home'), findsOneWidget);
     expect(
@@ -48,12 +49,15 @@ void main() {
   });
 
   testWidgets(
-    'routes home from the header back button and hospitals from CTA',
+    'routes home from Back to Home CTA and hospitals from CTA',
     (tester) async {
       await tester.pumpWidget(_buildHarness());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.arrow_back));
+      final homeCta = find.widgetWithText(FilledButton, 'Back to Home');
+      await tester.ensureVisible(homeCta);
+      await tester.pumpAndSettle();
+      await tester.tap(homeCta);
       await tester.pumpAndSettle();
       expect(find.text('Home Destination'), findsOneWidget);
 
