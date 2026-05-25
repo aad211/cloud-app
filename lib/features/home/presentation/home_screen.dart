@@ -286,7 +286,7 @@ class _LatestAnalysisCard extends StatelessWidget {
                 Text(
                   '${record.percentage}%',
                   style: TextStyle(
-                    color: _conditionColor(record.condition),
+                    color: Colors.white,
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
                   ),
@@ -325,22 +325,6 @@ class _LatestAnalysisCard extends StatelessWidget {
     }
   }
 
-  static Color _conditionColor(String condition) {
-    switch (condition) {
-      case 'Healthy':
-        return AppColors.success;
-      case 'Bronchitis':
-        return AppColors.gold;
-      case 'Pneumonia':
-      case 'COVID-19':
-        return AppColors.danger;
-      case 'Lung Cancer':
-        return AppColors.critical;
-      case 'Asthma':
-      default:
-        return Colors.white;
-    }
-  }
 }
 
 class _SecondaryActionButton extends StatelessWidget {

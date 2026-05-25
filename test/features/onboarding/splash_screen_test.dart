@@ -39,4 +39,20 @@ void main() {
 
     expect(gradient.colors, const [AppColors.navy, AppColors.blue]);
   });
+
+  testWidgets('does not wrap branding in a translucent panel', (tester) async {
+    await tester.pumpWidget(_buildSplash());
+
+    expect(
+      find.byWidgetPredicate((widget) {
+        if (widget is! Container || widget.decoration is! BoxDecoration) {
+          return false;
+        }
+        final decoration = widget.decoration as BoxDecoration;
+        return decoration.color == Colors.white.withValues(alpha: 0.06) &&
+            decoration.borderRadius == BorderRadius.circular(32);
+      }),
+      findsNothing,
+    );
+  });
 }

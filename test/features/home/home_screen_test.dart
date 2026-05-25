@@ -176,6 +176,23 @@ void main() {
       expect(find.text('87%'), findsOneWidget);
     });
 
+    testWidgets('renders latest-analysis percentage in white', (tester) async {
+      final storage = FakeLocalStorageService();
+      final record = AnalysisRecord(
+        id: 'test-white',
+        date: DateTime(2025, 6, 15, 14, 30),
+        condition: 'Healthy',
+        percentage: 87,
+      );
+      storage.history = [record.toJson()];
+
+      await tester.pumpWidget(_buildHome(storage: storage));
+      await tester.pump();
+
+      final text = tester.widget<Text>(find.text('87%'));
+      expect(text.style?.color, Colors.white);
+    });
+
     testWidgets('shows formatted timestamp', (tester) async {
       await tester.pumpWidget(_buildHome(storage: storageWithRecord()));
       await tester.pump();

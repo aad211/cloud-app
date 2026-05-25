@@ -65,20 +65,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           opacity: _opacityAnimation,
           child: ScaleTransition(
             scale: _scaleAnimation,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 36),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.08),
-                    blurRadius: 40,
-                    spreadRadius: 8,
-                  ),
-                ],
-              ),
-              child: const Column(
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32, vertical: 36),
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.cloud, size: 120, color: Colors.white),
