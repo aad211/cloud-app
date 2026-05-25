@@ -67,7 +67,7 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 20),
               historyAsync.when(
                 loading: () => const _AnalysisLoadingCard(),
-                error: (_, __) => const _EmptyAnalysisCard(),
+                error: (_, __) => const _AnalysisErrorCard(),
                 data:
                     (history) =>
                         history.isEmpty
@@ -175,6 +175,43 @@ class _EmptyAnalysisCard extends StatelessWidget {
             'Start by checking your symptoms to get your first respiratory health analysis',
             textAlign: TextAlign.center,
             style: TextStyle(color: Color(0xCCFFFFFF), fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AnalysisErrorCard extends StatelessWidget {
+  const _AnalysisErrorCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.disclaimerBackground,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: const Column(
+        children: [
+          Icon(Icons.error_outline, color: AppColors.critical, size: 48),
+          SizedBox(height: 12),
+          Text(
+            'Unable to load analysis history',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.navy,
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Please try again to view your latest respiratory analysis.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.warning, fontSize: 13),
           ),
         ],
       ),
@@ -320,24 +357,31 @@ class _SecondaryActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: AppColors.sand, width: 2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: AppColors.blue, size: 20),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: const TextStyle(color: AppColors.navy, fontSize: 11),
-              ),
-            ],
+      child: Material(
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: AppColors.sand, width: 2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                Icon(icon, color: AppColors.blue, size: 20),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: const TextStyle(color: AppColors.navy, fontSize: 11),
+                ),
+              ],
+            ),
           ),
         ),
       ),

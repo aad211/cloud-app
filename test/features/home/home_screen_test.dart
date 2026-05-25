@@ -68,6 +68,20 @@ void main() {
       expect(find.text('Latest Analysis'), findsNothing);
     });
 
+    testWidgets('shows an error state when history fails to load', (
+      tester,
+    ) async {
+      final storage = FakeLocalStorageService()
+        ..historyLoadException = Exception('load failed');
+
+      await tester.pumpWidget(_buildHome(storage: storage));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Unable to load analysis history'), findsOneWidget);
+      expect(find.text('No Analysis Yet'), findsNothing);
+    });
+
     testWidgets('shows Quick Actions heading and Check Symptoms button', (
       tester,
     ) async {
