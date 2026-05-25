@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -45,5 +46,14 @@ void main() {
     expect(result!.backend, RecordedCoughBackend.webBlob);
     expect(result.reference, 'blob:http://localhost/cough');
     expect(result.wavBytes, wavBytes);
+  });
+
+  test('web blob loader converts the blob URL to JS before fetch', () {
+    final source =
+        File(
+          'lib/features/analysis/data/blob_bytes_loader_web.dart',
+        ).readAsStringSync();
+
+    expect(RegExp(r'fetch\(\s*blobUrl\.toJS\s*\)').hasMatch(source), isTrue);
   });
 }
