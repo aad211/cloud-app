@@ -1,16 +1,57 @@
-# ohok_flutter
+# CLOUD App
 
-A new Flutter project.
+**CLOUD** - Cough Lung Observation & Diagnosis
+
+A Flutter application for cough analysis and lung health monitoring.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+This is a Flutter project for iOS, Android, and Web platforms.
 
-A few resources to get you started if this is your first Flutter project:
+### Prerequisites
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Flutter SDK ^3.10.3
+- Dart SDK (bundled with Flutter)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Running the App
+
+```bash
+# Get dependencies
+flutter pub get
+
+# Run on your device/emulator
+flutter run
+
+# Run on web
+flutter run -d chrome
+```
+
+### Building
+
+```bash
+# Android
+flutter build apk
+
+# iOS (requires macOS)
+flutter build ios
+
+# Web
+flutter build web
+```
+
+### Testing
+
+```bash
+# Run all tests
+flutter test
+
+# Run with coverage
+flutter test --coverage
+
+# Analyze code
+flutter analyze
+```
+
+## License
+
+Proprietary - Liberika Academy

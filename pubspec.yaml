@@ -1,5 +1,5 @@
-name: ohok_flutter
-description: "OHOK Flutter application."
+name: cloud_app
+description: "CLOUD App - Cough Lung Observation & Diagnosis"
 publish_to: 'none'
 version: 1.0.0+1
 

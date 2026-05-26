@@ -1,11 +1,11 @@
 {
-    "name": "ohok_flutter",
-    "short_name": "ohok_flutter",
+    "name": "CLOUD App",
+    "short_name": "CLOUD",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Cough Lung Observation & Diagnosis",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
