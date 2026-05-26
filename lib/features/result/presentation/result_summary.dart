@@ -19,46 +19,22 @@ class ResultSummary {
 }
 
 ResultSummary buildResultSummary([AnalysisRecord? record]) {
-  final resolvedRecord = record ?? _fallbackRecord;
+  if (record == null) {
+    throw StateError('No analysis record available.');
+  }
+
   final probabilities =
-      resolvedRecord.probabilities.isNotEmpty
-          ? resolvedRecord.probabilities
+      record.probabilities.isNotEmpty
+          ? record.probabilities
           : [
             ConditionProbability(
-              name: resolvedRecord.condition,
-              percentage: resolvedRecord.percentage,
-              hexColor: _fallbackColorFor(resolvedRecord.condition),
+              name: record.condition,
+              percentage: record.percentage,
+              hexColor: _fallbackColorFor(record.condition),
             ),
           ];
-  return ResultSummary(record: resolvedRecord, probabilities: probabilities);
+  return ResultSummary(record: record, probabilities: probabilities);
 }
-
-final _fallbackRecord = AnalysisRecord(
-  id: 'fallback-analysis',
-  date: DateTime(2025, 1, 1),
-  condition: 'Bronchitis',
-  percentage: 65,
-  probabilities: const [
-    ConditionProbability(
-      name: 'Bronchitis',
-      percentage: 65,
-      hexColor: 0xFFFAB95B,
-    ),
-    ConditionProbability(name: 'Healthy', percentage: 15, hexColor: 0xFF22C55E),
-    ConditionProbability(name: 'Asthma', percentage: 8, hexColor: 0xFF547792),
-    ConditionProbability(
-      name: 'Pneumonia',
-      percentage: 7,
-      hexColor: 0xFFEF4444,
-    ),
-    ConditionProbability(name: 'COVID-19', percentage: 3, hexColor: 0xFFEF4444),
-    ConditionProbability(
-      name: 'Lung Cancer',
-      percentage: 2,
-      hexColor: 0xFF991B1B,
-    ),
-  ],
-);
 
 int _fallbackColorFor(String condition) {
   return switch (condition) {

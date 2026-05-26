@@ -7,6 +7,7 @@ import 'package:ohok_flutter/core/models/condition_probability.dart';
 import 'package:ohok_flutter/core/storage/local_storage_service.dart';
 import 'package:ohok_flutter/features/analysis/presentation/latest_analysis_provider.dart';
 import 'package:ohok_flutter/features/result/presentation/result_screen.dart';
+import 'package:ohok_flutter/features/result/presentation/result_summary.dart';
 
 import '../../test_helpers/fake_local_storage_service.dart';
 
@@ -82,6 +83,30 @@ void main() {
       expect(find.text('COVID-19'), findsOneWidget);
     },
   );
+
+  testWidgets('shows the empty state when no analysis is available', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_buildHarness());
+    await tester.pumpAndSettle();
+
+    expect(find.text('No analysis available yet.'), findsOneWidget);
+    expect(find.text('Bronchitis'), findsNothing);
+    expect(find.text('65%'), findsNothing);
+  });
+
+  test('buildResultSummary requires a real analysis record', () {
+    expect(
+      () => buildResultSummary(),
+      throwsA(
+        isA<StateError>().having(
+          (error) => error.message,
+          'message',
+          'No analysis record available.',
+        ),
+      ),
+    );
+  });
 
   testWidgets('routes home from Back to Home CTA and hospitals from CTA', (
     tester,
