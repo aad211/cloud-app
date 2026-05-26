@@ -15,7 +15,7 @@ Future<void> bootstrap() async {
           SharedPrefsLocalStorageService(prefs),
         ),
       ],
-      child: const OhokApp(),
+      child: const CloudApp(),
     ),
   );
 }

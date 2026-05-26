@@ -12,7 +12,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [localStorageServiceProvider.overrideWithValue(storage)],
-        child: const OhokApp(),
+        child: const CloudApp(),
       ),
     );
 

@@ -15,9 +15,9 @@ abstract class WebInferenceBridge {
 
 @JS()
 @staticInterop
-class _OhokCoughInference {}
+class _CloudCoughInference {}
 
-extension on _OhokCoughInference {
+extension on _CloudCoughInference {
   external JSPromise<JSArray<JSNumber>> infer(
     JSFloat32Array input,
     JSNumber height,
@@ -27,7 +27,7 @@ extension on _OhokCoughInference {
 }
 
 @JS('globalThis.cloudCoughInference')
-external _OhokCoughInference? get _inferenceBridge;
+external _CloudCoughInference? get _inferenceBridge;
 
 class WindowWebInferenceBridge implements WebInferenceBridge {
   @override

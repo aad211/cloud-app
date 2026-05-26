@@ -28,7 +28,7 @@ void main() {
             FakeLocalStorageService(),
           ),
         ],
-        child: const OhokApp(),
+        child: const CloudApp(),
       ),
     );
 
@@ -49,7 +49,7 @@ void main() {
           overrides: [
             localStorageServiceProvider.overrideWithValue(fakeStorage),
           ],
-          child: const OhokApp(),
+          child: const CloudApp(),
         ),
       );
       await tester.pump();
@@ -74,7 +74,7 @@ void main() {
           overrides: [
             localStorageServiceProvider.overrideWithValue(fakeStorage),
           ],
-          child: const OhokApp(),
+          child: const CloudApp(),
         ),
       );
       await tester.pump();
@@ -89,7 +89,7 @@ void main() {
     },
   );
 
-  testWidgets('OhokApp disposes without errors when removed from tree',
+  testWidgets('CloudApp disposes without errors when removed from tree',
       (tester) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -98,12 +98,12 @@ void main() {
             FakeLocalStorageService(),
           ),
         ],
-        child: const OhokApp(),
+        child: const CloudApp(),
       ),
     );
     await tester.pump();
 
-    // Replace the widget tree — should trigger dispose on _OhokAppState.
+    // Replace the widget tree — should trigger dispose on _CloudAppState.
     await tester.pumpWidget(const SizedBox());
 
     // No exceptions means dispose ran cleanly.
@@ -121,7 +121,7 @@ void main() {
           overrides: [
             localStorageServiceProvider.overrideWithValue(fakeStorage),
           ],
-          child: const OhokApp(initialLocation: '/home'),
+          child: const CloudApp(initialLocation: '/home'),
         ),
       );
       await tester.pumpAndSettle();
@@ -141,7 +141,7 @@ void main() {
           overrides: [
             localStorageServiceProvider.overrideWithValue(fakeStorage),
           ],
-          child: const OhokApp(initialLocation: '/onboarding'),
+          child: const CloudApp(initialLocation: '/onboarding'),
         ),
       );
       await tester.pumpAndSettle();
@@ -159,7 +159,7 @@ void main() {
             localStorageServiceProvider
                 .overrideWithValue(_ThrowingStorageService()),
           ],
-          child: const OhokApp(initialLocation: '/home'),
+          child: const CloudApp(initialLocation: '/home'),
         ),
       );
       // Let the initial frame render, then give the async Future.error time

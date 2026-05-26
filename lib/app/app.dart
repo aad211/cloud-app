@@ -5,17 +5,17 @@ import 'package:cloud_flutter/app/router/app_router.dart';
 import 'package:cloud_flutter/app/theme/app_theme.dart';
 import 'package:cloud_flutter/core/widgets/mobile_frame.dart';
 
-class OhokApp extends ConsumerStatefulWidget {
-  const OhokApp({super.key, this.initialLocation});
+class CloudApp extends ConsumerStatefulWidget {
+  const CloudApp({super.key, this.initialLocation});
 
   /// Optional override for the router's initial location; used in tests.
   final String? initialLocation;
 
   @override
-  ConsumerState<OhokApp> createState() => _OhokAppState();
+  ConsumerState<CloudApp> createState() => _CloudAppState();
 }
 
-class _OhokAppState extends ConsumerState<OhokApp> {
+class _CloudAppState extends ConsumerState<CloudApp> {
   late final GoRouter _router;
 
   @override

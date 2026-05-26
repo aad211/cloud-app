@@ -168,7 +168,7 @@ void main() {
               ),
             ),
           ],
-          child: const OhokApp(),
+          child: const CloudApp(),
         ),
       );
 

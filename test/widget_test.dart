@@ -14,7 +14,7 @@ void main() {
             FakeLocalStorageService(),
           ),
         ],
-        child: const OhokApp(),
+        child: const CloudApp(),
       ),
     );
     await tester.pump();
