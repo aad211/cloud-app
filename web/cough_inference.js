@@ -75,7 +75,7 @@
     }
   }
 
-  globalThis.ohokCoughInference = {
+  globalThis.cloudCoughInference = {
     infer,
   };
 })();
