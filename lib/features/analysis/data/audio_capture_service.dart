@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ohok_flutter/features/analysis/domain/recorded_cough.dart';
@@ -36,14 +34,14 @@ class AudioCaptureService {
 
   Future<bool> hasPermission() async =>
       _hasPermission != null
-          ? _hasPermission!()
+          ? _hasPermission()
           : _audioRecorder.hasPermission();
 
   Future<void> startRecording() async {
     final path =
         _isWeb ? null : '${(await getTemporaryDirectory()).path}/recording.wav';
     if (_start != null) {
-      await _start!(path: path);
+      await _start(path: path);
       return;
     }
 
@@ -60,7 +58,7 @@ class AudioCaptureService {
 
   Future<RecordedCough?> stopRecording() async {
     final reference =
-        _stop != null ? await _stop!() : await _audioRecorder.stop();
+        _stop != null ? await _stop() : await _audioRecorder.stop();
     if (reference == null) {
       return null;
     }

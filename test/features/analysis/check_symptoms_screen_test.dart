@@ -290,7 +290,22 @@ void main() {
     final storage = FakeLocalStorageService();
     _setPhoneViewport(tester);
 
-    await tester.pumpWidget(_buildCheckSymptomsHarness(storage));
+    await tester.pumpWidget(
+      _buildCheckSymptomsHarness(
+        storage,
+        coughAnalysisService: _buildAnalysisService(
+          onInfer: ({
+            required input,
+            required height,
+            required width,
+            required channels,
+          }) async {
+            await Future<void>.delayed(const Duration(milliseconds: 50));
+            return const [0.72, 0.28];
+          },
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(_recordButton());
@@ -304,11 +319,14 @@ void main() {
     expect(find.text('Analyzing...'), findsOneWidget);
     expect(find.text('Analysis Result'), findsNothing);
 
-    await tester.pump(const Duration(seconds: 4));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
   });
 
-  testWidgets('shows success state for 1 second before navigating to result', (
+  testWidgets(
+    'shows success state as soon as analysis completes and waits 1 second before navigating to result',
+    (
     tester,
   ) async {
     final storage = FakeLocalStorageService();
@@ -324,10 +342,6 @@ void main() {
 
     await tester.tap(find.text('Analyze Now'));
     await tester.pump();
-
-    expect(find.text('Analyzing...'), findsOneWidget);
-
-    await tester.pump(const Duration(milliseconds: 2500));
     await tester.pump();
 
     expect(find.text('Analysis Complete ✓'), findsOneWidget);
@@ -337,7 +351,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Analysis Result'), findsOneWidget);
-  });
+  },
+  );
 
   testWidgets('disables recording during success delay before navigation', (
     tester,
@@ -464,7 +479,7 @@ void main() {
       expect(find.text('Analyze Now'), findsOneWidget);
       expect(find.text('Analysis Result'), findsNothing);
       expect(
-        find.text('Failed to save analysis. Please try again.'),
+        find.text('Failed to analyze cough. Please try again.'),
         findsOneWidget,
       );
       expect(storage.history, isEmpty);
@@ -497,10 +512,17 @@ AudioCaptureService _buildAudioCaptureService({
 CoughAnalysisService _buildAnalysisService({
   List<String> labels = const ['Bronchitis', 'Healthy'],
   List<double> scores = const [0.72, 0.28],
+  Future<List<double>> Function({
+    required Float32List input,
+    required int height,
+    required int width,
+    required int channels,
+  })? onInfer,
 }) {
   return CoughAnalysisService(
     backend: _FakeAnalysisInferenceBackend(
       onInfer:
+          onInfer ??
           ({
             required input,
             required height,

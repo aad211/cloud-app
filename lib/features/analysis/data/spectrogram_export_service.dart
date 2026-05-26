@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -77,7 +76,7 @@ class SpectrogramExportService {
 
     final documentsDirectoryPath =
         _getDocumentsDirectoryPath != null
-            ? await _getDocumentsDirectoryPath!()
+            ? await _getDocumentsDirectoryPath()
             : await native_storage.getApplicationDocumentsDirectoryPath();
     final nativePath = native_storage.joinPath([
       documentsDirectoryPath,
@@ -92,7 +91,7 @@ class SpectrogramExportService {
     String? repoMirrorPath;
     final repoRootPath =
         _resolveRepoRootDirectoryPath != null
-            ? await _resolveRepoRootDirectoryPath!()
+            ? await _resolveRepoRootDirectoryPath()
             : await native_storage.resolveRepoRootDirectoryPath();
     if (repoRootPath != null) {
       final candidatePath = native_storage.joinPath([

@@ -62,6 +62,11 @@ class CoughAnalysisService {
     final wavSamples = (_readWavSamples ?? WavReader.readMono16BitPcmBytes)(
       recordedCough.wavBytes,
     );
+    if (wavSamples.isEmpty) {
+      throw StateError(
+        'Recorded cough audio did not contain valid 16-bit PCM WAV samples.',
+      );
+    }
     final melSpectrogram = (_computeMelSpectrogram ??
         _defaultComputeMelSpectrogram)(wavSamples);
     final preparedInput = _prepareInput(
@@ -115,7 +120,7 @@ class CoughAnalysisService {
       condition: topProbability.name,
       percentage: topProbability.percentage,
       probabilities: probabilities,
-      audioFilePath: recordedCough.reference,
+      audioFilePath: null,
       spectrogramFilePath: exportResult.spectrogramFilePath,
       repoMirrorPath: exportResult.repoMirrorPath,
       storageBackend: exportResult.storageBackend,

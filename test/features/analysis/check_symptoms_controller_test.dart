@@ -136,6 +136,120 @@ void main() {
       expect(storage.history.single['percentage'], 72);
     },
   );
+
+  test(
+    'analyze maps missing model setup failures to a user-safe message',
+    () async {
+      final storage = FakeLocalStorageService();
+      final container = ProviderContainer(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(storage),
+          audioCaptureServiceProvider.overrideWithValue(
+            _buildAudioCaptureService(),
+          ),
+          coughAnalysisServiceProvider.overrideWithValue(
+            CoughAnalysisService(
+              backend: _FakeAnalysisInferenceBackend(
+                onInfer: ({
+                  required input,
+                  required height,
+                  required width,
+                  required channels,
+                }) async {
+                  fail('infer should not run when labels are missing');
+                },
+              ),
+              loadLabels: () async {
+                throw StateError(
+                  'Analysis labels are missing at assets/models/labels.txt. '
+                  'Add and register the real labels.txt file before running analysis.',
+                );
+              },
+              generateId: () => 'analysis-test',
+              now: () => DateTime.utc(2025, 1, 1),
+              inputHeight: 1,
+              inputWidth: 1,
+              inputChannels: 1,
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final subscription = container.listen(
+        checkSymptomsControllerProvider,
+        (_, __) {},
+      );
+      addTearDown(subscription.close);
+
+      final notifier = container.read(checkSymptomsControllerProvider.notifier);
+
+      await notifier.toggleRecording();
+      await notifier.toggleRecording();
+
+      final success = await notifier.analyze();
+
+      expect(success, isFalse);
+      expect(notifier.state.buttonState, AnalysisButtonState.idle);
+      expect(
+        notifier.state.errorMessage,
+        'Analysis setup is incomplete. Add the real model and labels before running analysis.',
+      );
+      expect(container.read(latestAnalysisProvider), isNull);
+      expect(storage.history, isEmpty);
+    },
+  );
+
+  test('analyze maps invalid WAV errors to a user-safe message', () async {
+    final storage = FakeLocalStorageService();
+    final container = ProviderContainer(
+      overrides: [
+        localStorageServiceProvider.overrideWithValue(storage),
+        audioCaptureServiceProvider.overrideWithValue(_buildAudioCaptureService()),
+        coughAnalysisServiceProvider.overrideWithValue(
+          CoughAnalysisService(
+            backend: _FakeAnalysisInferenceBackend(
+              onInfer: ({
+                required input,
+                required height,
+                required width,
+                required channels,
+              }) async {
+                fail('infer should not run when WAV decoding fails');
+              },
+            ),
+            loadLabels: () async => const ['Healthy'],
+            readWavSamples: (_) => const [],
+            generateId: () => 'analysis-test',
+            now: () => DateTime.utc(2025, 1, 1),
+            inputHeight: 1,
+            inputWidth: 1,
+            inputChannels: 1,
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final subscription = container.listen(
+      checkSymptomsControllerProvider,
+      (_, __) {},
+    );
+    addTearDown(subscription.close);
+
+    final notifier = container.read(checkSymptomsControllerProvider.notifier);
+
+    await notifier.toggleRecording();
+    await notifier.toggleRecording();
+
+    final success = await notifier.analyze();
+
+    expect(success, isFalse);
+    expect(notifier.state.buttonState, AnalysisButtonState.idle);
+    expect(
+      notifier.state.errorMessage,
+      'Recorded cough audio is invalid. Please try recording again.',
+    );
+    expect(storage.history, isEmpty);
+  });
 }
 
 AudioCaptureService _buildAudioCaptureService({

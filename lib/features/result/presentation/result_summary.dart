@@ -38,8 +38,8 @@ ResultSummary buildResultSummary([AnalysisRecord? record]) {
 
 int _fallbackColorFor(String condition) {
   return switch (condition) {
-    'Healthy' => AppColors.success.value,
-    'Pneumonia' || 'COVID-19' || 'Lung Cancer' => AppColors.critical.value,
-    _ => AppColors.gold.value,
+    'Healthy' => AppColors.success.toARGB32(),
+    'Pneumonia' || 'COVID-19' || 'Lung Cancer' => AppColors.critical.toARGB32(),
+    _ => AppColors.gold.toARGB32(),
   };
 }

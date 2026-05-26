@@ -89,7 +89,7 @@ void main() {
       expect(record.date, DateTime.utc(2025, 1, 2, 3, 4, 5));
       expect(record.condition, 'Bronchitis');
       expect(record.percentage, 75);
-      expect(record.audioFilePath, '/records/cough.wav');
+      expect(record.audioFilePath, isNull);
       expect(record.spectrogramFilePath, '/exports/analysis-123.png');
       expect(record.repoMirrorPath, '/repo/analysis-123.png');
       expect(record.storageBackend, 'native');
@@ -155,6 +155,50 @@ void main() {
           (error) => error.message,
           'message',
           'Expected 2 scores for the loaded labels, but received 1.',
+        ),
+      ),
+    );
+  });
+
+  test('analyze rejects recordings that do not decode into WAV samples', () async {
+    final service = CoughAnalysisService(
+      backend: _FakeAnalysisInferenceBackend(
+        onInfer: ({
+          required input,
+          required height,
+          required width,
+          required channels,
+        }) async {
+          fail('infer should not run when WAV decoding fails');
+        },
+      ),
+      loadLabels: () async => const ['Healthy'],
+      exportSpectrogram: ({
+        required analysisId,
+        required melSpectrogram,
+      }) async {
+        fail('spectrogram export should not run when WAV decoding fails');
+      },
+      generateId: () => 'analysis-invalid-wav',
+      now: () => DateTime.utc(2025, 1, 1),
+      inputHeight: 1,
+      inputWidth: 1,
+      inputChannels: 1,
+    );
+
+    await expectLater(
+      () => service.analyze(
+        RecordedCough(
+          reference: 'blob:http://localhost/invalid',
+          wavBytes: Uint8List.fromList(const [0, 1, 2, 3]),
+          backend: RecordedCoughBackend.webBlob,
+        ),
+      ),
+      throwsA(
+        isA<StateError>().having(
+          (error) => error.message,
+          'message',
+          'Recorded cough audio did not contain valid 16-bit PCM WAV samples.',
         ),
       ),
     );

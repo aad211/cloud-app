@@ -50,6 +50,11 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
       'Microphone permission is required to record your cough.';
   static const _recordingFailedError =
       'Failed to capture audio. Please try again.';
+  static const _analysisSetupError =
+      'Analysis setup is incomplete. Add the real model and labels before running analysis.';
+  static const _invalidRecordingInputError =
+      'Recorded cough audio is invalid. Please try recording again.';
+  static const _analysisFailedError = 'Failed to analyze cough. Please try again.';
 
   final Ref ref;
   Timer? _recordingTimer;
@@ -146,10 +151,6 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
       errorMessage: '',
       buttonState: AnalysisButtonState.loading,
     );
-    await Future<void>.delayed(const Duration(milliseconds: 2500));
-    if (!mounted) {
-      return false;
-    }
 
     try {
       final record = await ref
@@ -235,14 +236,21 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
   String _errorMessageFor(Object error) {
     if (error is StateError) {
       final message = error.message;
-      if (message is String && message.isNotEmpty) {
-        return message;
+      if (_isAnalysisSetupFailure(message)) {
+        return _analysisSetupError;
+      }
+      if (message.contains('valid 16-bit PCM WAV samples')) {
+        return _invalidRecordingInputError;
       }
     }
-    if (error is Exception) {
-      return 'Failed to save analysis. Please try again.';
-    }
-    return 'Failed to analyze cough. Please try again.';
+    return _analysisFailedError;
+  }
+
+  bool _isAnalysisSetupFailure(String message) {
+    return message.contains('labels.txt') ||
+        message.contains('cloud.tflite') ||
+        message.contains('TensorFlow.js') ||
+        message.contains('tf-tflite.min.js');
   }
 
   void _reportControllerError({
