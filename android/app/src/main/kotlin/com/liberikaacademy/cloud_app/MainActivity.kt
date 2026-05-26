@@ -1,4 +1,4 @@
-package com.example.ohok_flutter
+package com.liberikaacademy.cloud_app
 
 import io.flutter.embedding.android.FlutterActivity
 
