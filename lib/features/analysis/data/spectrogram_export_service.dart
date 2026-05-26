@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'native_storage_stub.dart'
+    if (dart.library.io) 'native_storage_io.dart'
+    as native_storage;
 
 class SpectrogramExportResult {
   const SpectrogramExportResult({
@@ -24,26 +26,26 @@ class SpectrogramExportResult {
 class SpectrogramExportService {
   SpectrogramExportService({
     bool? isWeb,
-    Future<Directory> Function()? getDocumentsDirectory,
+    Future<String> Function()? getDocumentsDirectoryPath,
     Future<SharedPreferences> Function()? getSharedPreferences,
     Future<bool> Function(String key, String value)? saveBrowserValue,
-    Future<Directory?> Function()? resolveRepoRootDirectory,
+    Future<String?> Function()? resolveRepoRootDirectoryPath,
     Future<void> Function(String path, Uint8List bytes)? writeBytesToFile,
     Future<Uint8List> Function(List<List<double>> melSpectrogram)?
     renderPngBytes,
   }) : _isWeb = isWeb ?? kIsWeb,
-       _getDocumentsDirectory = getDocumentsDirectory,
+       _getDocumentsDirectoryPath = getDocumentsDirectoryPath,
        _getSharedPreferences = getSharedPreferences,
        _saveBrowserValue = saveBrowserValue,
-       _resolveRepoRootDirectory = resolveRepoRootDirectory,
+       _resolveRepoRootDirectoryPath = resolveRepoRootDirectoryPath,
        _writeBytesToFile = writeBytesToFile,
        _renderPngBytes = renderPngBytes;
 
   final bool _isWeb;
-  final Future<Directory> Function()? _getDocumentsDirectory;
+  final Future<String> Function()? _getDocumentsDirectoryPath;
   final Future<SharedPreferences> Function()? _getSharedPreferences;
   final Future<bool> Function(String key, String value)? _saveBrowserValue;
-  final Future<Directory?> Function()? _resolveRepoRootDirectory;
+  final Future<String?> Function()? _resolveRepoRootDirectoryPath;
   final Future<void> Function(String path, Uint8List bytes)? _writeBytesToFile;
   final Future<Uint8List> Function(List<List<double>> melSpectrogram)?
   _renderPngBytes;
@@ -73,24 +75,33 @@ class SpectrogramExportService {
       );
     }
 
-    final documentsDirectory =
-        _getDocumentsDirectory != null
-            ? await _getDocumentsDirectory()
-            : await getApplicationDocumentsDirectory();
-    final nativePath =
-        '${documentsDirectory.path}${Platform.pathSeparator}spectrograms${Platform.pathSeparator}$safeAnalysisId.png';
-    await (_writeBytesToFile ?? _defaultWriteBytesToFile)(nativePath, pngBytes);
+    final documentsDirectoryPath =
+        _getDocumentsDirectoryPath != null
+            ? await _getDocumentsDirectoryPath!()
+            : await native_storage.getApplicationDocumentsDirectoryPath();
+    final nativePath = native_storage.joinPath([
+      documentsDirectoryPath,
+      'spectrograms',
+      '$safeAnalysisId.png',
+    ]);
+    await (_writeBytesToFile ?? native_storage.writeBytesToFile)(
+      nativePath,
+      pngBytes,
+    );
 
     String? repoMirrorPath;
-    final repoRoot =
-        _resolveRepoRootDirectory != null
-            ? await _resolveRepoRootDirectory!()
-            : await _defaultResolveRepoRootDirectory();
-    if (repoRoot != null) {
-      final candidatePath =
-          '${repoRoot.path}${Platform.pathSeparator}analysis_outputs${Platform.pathSeparator}$safeAnalysisId.png';
+    final repoRootPath =
+        _resolveRepoRootDirectoryPath != null
+            ? await _resolveRepoRootDirectoryPath!()
+            : await native_storage.resolveRepoRootDirectoryPath();
+    if (repoRootPath != null) {
+      final candidatePath = native_storage.joinPath([
+        repoRootPath,
+        'analysis_outputs',
+        '$safeAnalysisId.png',
+      ]);
       try {
-        await (_writeBytesToFile ?? _defaultWriteBytesToFile)(
+        await (_writeBytesToFile ?? native_storage.writeBytesToFile)(
           candidatePath,
           pngBytes,
         );
@@ -116,35 +127,12 @@ class SpectrogramExportService {
     );
   }
 
-  Future<void> _defaultWriteBytesToFile(String path, Uint8List bytes) async {
-    final file = File(path);
-    await file.parent.create(recursive: true);
-    await file.writeAsBytes(bytes, flush: true);
-  }
-
   Future<bool> _saveToSharedPreferences(String key, String value) async {
     final prefs =
         _getSharedPreferences != null
             ? await _getSharedPreferences()
             : await SharedPreferences.getInstance();
     return prefs.setString(key, value);
-  }
-
-  Future<Directory?> _defaultResolveRepoRootDirectory() async {
-    var current = Directory.current.absolute;
-    while (true) {
-      if (await Directory(
-        '${current.path}${Platform.pathSeparator}.git',
-      ).exists()) {
-        return current;
-      }
-
-      final parent = current.parent;
-      if (parent.path == current.path) {
-        return null;
-      }
-      current = parent;
-    }
   }
 
   Future<Uint8List> _defaultRenderPngBytes(

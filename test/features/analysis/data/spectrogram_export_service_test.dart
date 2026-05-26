@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,29 +9,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late Directory workspaceDir;
-
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    workspaceDir =
-        Directory(
-          'test/features/analysis/data/.spectrogram_export_service_workspace',
-        ).absolute;
-    if (workspaceDir.existsSync()) {
-      await workspaceDir.delete(recursive: true);
-    }
-    await workspaceDir.create(recursive: true);
-  });
-
-  tearDown(() async {
-    if (workspaceDir.existsSync()) {
-      await workspaceDir.delete(recursive: true);
-    }
   });
 
   test(
     'native export saves the spectrogram and tolerates repo-mirror failure',
     () async {
+      final writes = <String, Uint8List>{};
       final reportedErrors = <FlutterErrorDetails>[];
       final originalOnError = FlutterError.onError;
       FlutterError.onError = reportedErrors.add;
@@ -39,16 +24,13 @@ void main() {
 
       final service = SpectrogramExportService(
         isWeb: false,
-        getDocumentsDirectory: () async => workspaceDir,
-        resolveRepoRootDirectory: () async => workspaceDir,
+        getDocumentsDirectoryPath: () async => '/virtual/documents',
+        resolveRepoRootDirectoryPath: () async => '/virtual/repo',
         writeBytesToFile: (path, bytes) async {
           if (path.contains('analysis_outputs')) {
-            throw const FileSystemException('mirror write failed');
+            throw StateError('mirror write failed');
           }
-
-          final file = File(path);
-          await file.parent.create(recursive: true);
-          await file.writeAsBytes(bytes, flush: true);
+          writes[path] = Uint8List.fromList(bytes);
         },
       );
 
@@ -64,18 +46,9 @@ void main() {
       expect(result.repoMirrorPath, isNull);
       expect(result.spectrogramFilePath, contains('spectrograms'));
 
-      final savedFile = File(result.spectrogramFilePath);
-      expect(savedFile.existsSync(), isTrue);
-      expect(savedFile.readAsBytesSync().take(8), [
-        137,
-        80,
-        78,
-        71,
-        13,
-        10,
-        26,
-        10,
-      ]);
+      final savedBytes = writes[result.spectrogramFilePath];
+      expect(savedBytes, isNotNull);
+      expect(savedBytes!.take(8), [137, 80, 78, 71, 13, 10, 26, 10]);
 
       expect(reportedErrors, hasLength(1));
       expect(reportedErrors.single.library, 'spectrogram_export_service');
@@ -84,6 +57,7 @@ void main() {
         contains('Failed to persist spectrogram repo mirror.'),
       );
     },
+    skip: kIsWeb,
   );
 
   test('web export stores a browser key instead of a file path', () async {
@@ -91,10 +65,10 @@ void main() {
     final service = SpectrogramExportService(
       isWeb: true,
       getSharedPreferences: () async => prefs,
-      getDocumentsDirectory: () async {
+      getDocumentsDirectoryPath: () async {
         fail('web export should not request a documents directory');
       },
-      resolveRepoRootDirectory: () async {
+      resolveRepoRootDirectoryPath: () async {
         fail('web export should not attempt a repo mirror');
       },
     );
