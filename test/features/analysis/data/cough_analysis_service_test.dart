@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ohok_flutter/features/analysis/data/analysis_inference_backend.dart';
-import 'package:ohok_flutter/features/analysis/data/cough_analysis_service.dart';
-import 'package:ohok_flutter/features/analysis/data/spectrogram_export_service.dart';
-import 'package:ohok_flutter/features/analysis/domain/recorded_cough.dart';
+import 'package:cloud_flutter/features/analysis/data/analysis_inference_backend.dart';
+import 'package:cloud_flutter/features/analysis/data/cough_analysis_service.dart';
+import 'package:cloud_flutter/features/analysis/data/spectrogram_export_service.dart';
+import 'package:cloud_flutter/features/analysis/domain/recorded_cough.dart';
 
 void main() {
   test(

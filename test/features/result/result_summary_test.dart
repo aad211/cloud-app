@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ohok_flutter/app/theme/app_colors.dart';
-import 'package:ohok_flutter/core/models/analysis_record.dart';
-import 'package:ohok_flutter/core/models/condition_probability.dart';
-import 'package:ohok_flutter/features/result/presentation/result_summary.dart';
+import 'package:cloud_flutter/app/theme/app_colors.dart';
+import 'package:cloud_flutter/core/models/analysis_record.dart';
+import 'package:cloud_flutter/core/models/condition_probability.dart';
+import 'package:cloud_flutter/features/result/presentation/result_summary.dart';
 
 void main() {
   test(

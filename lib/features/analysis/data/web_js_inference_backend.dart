@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:ohok_flutter/features/analysis/data/analysis_inference_backend.dart';
+import 'package:cloud_flutter/features/analysis/data/analysis_inference_backend.dart';
 
 import 'web_inference_bridge_stub.dart'
     if (dart.library.js_interop) 'web_inference_bridge_web.dart';

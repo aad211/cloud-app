@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ohok_flutter/features/analysis/domain/recorded_cough.dart';
+import 'package:cloud_flutter/features/analysis/domain/recorded_cough.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 

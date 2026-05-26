@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ohok_flutter/app/theme/app_colors.dart';
+import 'package:cloud_flutter/app/theme/app_colors.dart';
 
 class ParityPageHeader extends StatelessWidget {
   const ParityPageHeader({

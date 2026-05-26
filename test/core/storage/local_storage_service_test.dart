@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ohok_flutter/core/storage/local_storage_service.dart';
+import 'package:cloud_flutter/core/storage/local_storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

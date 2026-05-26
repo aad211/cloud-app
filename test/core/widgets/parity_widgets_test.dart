@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ohok_flutter/app/theme/app_colors.dart';
-import 'package:ohok_flutter/core/widgets/condition_visuals.dart';
-import 'package:ohok_flutter/core/widgets/parity_cards.dart';
-import 'package:ohok_flutter/core/widgets/parity_page_header.dart';
+import 'package:cloud_flutter/app/theme/app_colors.dart';
+import 'package:cloud_flutter/core/widgets/condition_visuals.dart';
+import 'package:cloud_flutter/core/widgets/parity_cards.dart';
+import 'package:cloud_flutter/core/widgets/parity_page_header.dart';
 
 void main() {
   group('conditionVisualsFor', () {

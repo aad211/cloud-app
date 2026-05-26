@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ohok_flutter/features/analysis/data/audio_capture_service.dart';
-import 'package:ohok_flutter/features/analysis/data/cough_analysis_service.dart';
-import 'package:ohok_flutter/features/analysis/domain/recorded_cough.dart';
-import 'package:ohok_flutter/features/analysis/presentation/analysis_history_controller.dart';
-import 'package:ohok_flutter/features/analysis/presentation/latest_analysis_provider.dart';
+import 'package:cloud_flutter/features/analysis/data/audio_capture_service.dart';
+import 'package:cloud_flutter/features/analysis/data/cough_analysis_service.dart';
+import 'package:cloud_flutter/features/analysis/domain/recorded_cough.dart';
+import 'package:cloud_flutter/features/analysis/presentation/analysis_history_controller.dart';
+import 'package:cloud_flutter/features/analysis/presentation/latest_analysis_provider.dart';
 
 enum AnalysisButtonState { idle, loading, success }
 

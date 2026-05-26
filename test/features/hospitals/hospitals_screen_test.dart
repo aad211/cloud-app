@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ohok_flutter/features/hospitals/presentation/hospitals_screen.dart';
+import 'package:cloud_flutter/features/hospitals/presentation/hospitals_screen.dart';
 
 Widget _buildSubject() => const MaterialApp(home: HospitalsScreen());
 

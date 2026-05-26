@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ohok_flutter/core/models/article_record.dart';
+import 'package:cloud_flutter/core/models/article_record.dart';
 
 const List<ArticleRecord> articleSeed = [
   ArticleRecord(

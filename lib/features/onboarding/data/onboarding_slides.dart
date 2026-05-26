@@ -1,4 +1,4 @@
-import 'package:ohok_flutter/core/models/onboarding_slide.dart';
+import 'package:cloud_flutter/core/models/onboarding_slide.dart';
 
 const List<OnboardingSlide> onboardingSlides = [
   OnboardingSlide(

@@ -1,4 +1,4 @@
-import 'package:ohok_flutter/core/models/hospital_record.dart';
+import 'package:cloud_flutter/core/models/hospital_record.dart';
 
 const List<HospitalRecord> hospitalSeed = [
   HospitalRecord(

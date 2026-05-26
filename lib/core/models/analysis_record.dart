@@ -1,4 +1,4 @@
-import 'package:ohok_flutter/core/models/condition_probability.dart';
+import 'package:cloud_flutter/core/models/condition_probability.dart';
 
 class AnalysisRecord {
   const AnalysisRecord({

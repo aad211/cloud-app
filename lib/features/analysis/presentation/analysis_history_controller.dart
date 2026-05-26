@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ohok_flutter/core/models/analysis_record.dart';
-import 'package:ohok_flutter/core/storage/local_storage_service.dart';
+import 'package:cloud_flutter/core/models/analysis_record.dart';
+import 'package:cloud_flutter/core/storage/local_storage_service.dart';
 
 final analysisHistoryProvider =
     AsyncNotifierProvider<AnalysisHistoryController, List<AnalysisRecord>>(

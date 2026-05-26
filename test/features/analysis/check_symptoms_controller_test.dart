@@ -2,13 +2,13 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ohok_flutter/core/storage/local_storage_service.dart';
-import 'package:ohok_flutter/features/analysis/data/analysis_inference_backend.dart';
-import 'package:ohok_flutter/features/analysis/data/audio_capture_service.dart';
-import 'package:ohok_flutter/features/analysis/data/cough_analysis_service.dart';
-import 'package:ohok_flutter/features/analysis/data/spectrogram_export_service.dart';
-import 'package:ohok_flutter/features/analysis/presentation/check_symptoms_controller.dart';
-import 'package:ohok_flutter/features/analysis/presentation/latest_analysis_provider.dart';
+import 'package:cloud_flutter/core/storage/local_storage_service.dart';
+import 'package:cloud_flutter/features/analysis/data/analysis_inference_backend.dart';
+import 'package:cloud_flutter/features/analysis/data/audio_capture_service.dart';
+import 'package:cloud_flutter/features/analysis/data/cough_analysis_service.dart';
+import 'package:cloud_flutter/features/analysis/data/spectrogram_export_service.dart';
+import 'package:cloud_flutter/features/analysis/presentation/check_symptoms_controller.dart';
+import 'package:cloud_flutter/features/analysis/presentation/latest_analysis_provider.dart';
 
 import '../../test_helpers/fake_local_storage_service.dart';
 

@@ -1,4 +1,4 @@
-@JS('globalThis.ohokCoughInference')
+@JS('globalThis.cloudCoughInference')
 library;
 
 import 'dart:js_interop';
@@ -26,7 +26,7 @@ extension on _OhokCoughInference {
   );
 }
 
-@JS('globalThis.ohokCoughInference')
+@JS('globalThis.cloudCoughInference')
 external _OhokCoughInference? get _inferenceBridge;
 
 class WindowWebInferenceBridge implements WebInferenceBridge {
@@ -40,7 +40,7 @@ class WindowWebInferenceBridge implements WebInferenceBridge {
     final inferenceBridge = _inferenceBridge;
     if (inferenceBridge == null) {
       throw StateError(
-        'window.ohokCoughInference is not available. '
+        'window.cloudCoughInference is not available. '
         'Ensure web/cough_inference.js is loaded before starting analysis.',
       );
     }

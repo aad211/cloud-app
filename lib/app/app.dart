@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ohok_flutter/app/router/app_router.dart';
-import 'package:ohok_flutter/app/theme/app_theme.dart';
-import 'package:ohok_flutter/core/widgets/mobile_frame.dart';
+import 'package:cloud_flutter/app/router/app_router.dart';
+import 'package:cloud_flutter/app/theme/app_theme.dart';
+import 'package:cloud_flutter/core/widgets/mobile_frame.dart';
 
 class OhokApp extends ConsumerStatefulWidget {
   const OhokApp({super.key, this.initialLocation});

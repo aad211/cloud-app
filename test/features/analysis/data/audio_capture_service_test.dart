@@ -2,8 +2,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ohok_flutter/features/analysis/data/audio_capture_service.dart';
-import 'package:ohok_flutter/features/analysis/domain/recorded_cough.dart';
+import 'package:cloud_flutter/features/analysis/data/audio_capture_service.dart';
+import 'package:cloud_flutter/features/analysis/domain/recorded_cough.dart';
 
 void main() {
   test('stop returns a native-file recording with bytes', () async {

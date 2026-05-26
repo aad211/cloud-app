@@ -1,4 +1,4 @@
-import 'package:ohok_flutter/core/models/news_record.dart';
+import 'package:cloud_flutter/core/models/news_record.dart';
 
 const List<NewsRecord> newsSeed = [
   NewsRecord(

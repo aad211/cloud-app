@@ -1,4 +1,4 @@
-import 'package:ohok_flutter/core/storage/local_storage_service.dart';
+import 'package:cloud_flutter/core/storage/local_storage_service.dart';
 
 class FakeLocalStorageService implements LocalStorageService {
   bool hasCompletedOnboarding = false;

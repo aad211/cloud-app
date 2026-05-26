@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ohok_flutter/app/theme/app_colors.dart';
-import 'package:ohok_flutter/features/onboarding/presentation/splash_screen.dart';
+import 'package:cloud_flutter/app/theme/app_colors.dart';
+import 'package:cloud_flutter/features/onboarding/presentation/splash_screen.dart';
 
 import '../../test_helpers/fake_local_storage_service.dart';
-import 'package:ohok_flutter/core/storage/local_storage_service.dart';
+import 'package:cloud_flutter/core/storage/local_storage_service.dart';
 
 Widget _buildSplash() {
   return ProviderScope(

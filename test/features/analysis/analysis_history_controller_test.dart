@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ohok_flutter/core/models/analysis_record.dart';
-import 'package:ohok_flutter/core/storage/local_storage_service.dart';
-import 'package:ohok_flutter/features/analysis/presentation/analysis_history_controller.dart';
+import 'package:cloud_flutter/core/models/analysis_record.dart';
+import 'package:cloud_flutter/core/storage/local_storage_service.dart';
+import 'package:cloud_flutter/features/analysis/presentation/analysis_history_controller.dart';
 
 import '../../test_helpers/fake_local_storage_service.dart';
 
