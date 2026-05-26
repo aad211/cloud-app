@@ -1,17 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ohok_flutter/app/theme/app_colors.dart';
+import 'package:ohok_flutter/core/models/analysis_record.dart';
 import 'package:ohok_flutter/core/models/condition_probability.dart';
 import 'package:ohok_flutter/core/widgets/parity_cards.dart';
 import 'package:ohok_flutter/core/widgets/parity_page_header.dart';
+import 'package:ohok_flutter/features/analysis/presentation/analysis_history_controller.dart';
+import 'package:ohok_flutter/features/analysis/presentation/latest_analysis_provider.dart';
 import 'package:ohok_flutter/features/result/presentation/result_summary.dart';
 
-class ResultScreen extends StatelessWidget {
+class ResultScreen extends ConsumerWidget {
   const ResultScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final summary = buildResultSummary();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final latestRecord = ref.watch(latestAnalysisProvider);
+    final historyAsync = ref.watch(analysisHistoryProvider);
+    final selectedRecord = _resolveRecord(
+      latestRecord,
+      historyAsync.valueOrNull,
+    );
+
+    if (selectedRecord == null) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Column(
+            children: [
+              ParityPageHeader(
+                title: 'Analysis Result',
+                subtitle: 'Based on your cough recording',
+                onBack: () => context.go('/home'),
+              ),
+              const Expanded(
+                child: Center(
+                  child: Text(
+                    'No analysis available yet.',
+                    style: TextStyle(
+                      color: AppColors.navy,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final summary = buildResultSummary(selectedRecord);
     final record = summary.record;
     final items = summary.probabilities;
 
@@ -180,6 +220,19 @@ class ResultScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+AnalysisRecord? _resolveRecord(
+  AnalysisRecord? latestRecord,
+  List<AnalysisRecord>? history,
+) {
+  if (latestRecord != null) {
+    return latestRecord;
+  }
+  if (history != null && history.isNotEmpty) {
+    return history.first;
+  }
+  return null;
 }
 
 class _RiskBadge extends StatelessWidget {

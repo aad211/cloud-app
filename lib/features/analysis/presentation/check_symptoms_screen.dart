@@ -77,7 +77,7 @@ class CheckSymptomsScreen extends ConsumerWidget {
                           FilledButton(
                             onPressed:
                                 state.buttonState == AnalysisButtonState.idle
-                                    ? controller.toggleMockRecording
+                                    ? () => controller.toggleRecording()
                                     : null,
                             style: FilledButton.styleFrom(
                               backgroundColor: recordButtonColor,
