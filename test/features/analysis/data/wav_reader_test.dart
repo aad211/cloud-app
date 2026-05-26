@@ -17,6 +17,9 @@ Uint8List _buildTestWav({
   required List<int> samples,
   int channels = 1,
   int? blockAlign,
+  int formatCode = 1,
+  int bitsPerSample = 16,
+  bool dataBeforeFormat = false,
   List<_Chunk> extraChunks = const [],
 }) {
   final sampleBytes = BytesBuilder();
@@ -27,16 +30,24 @@ Uint8List _buildTestWav({
   final dataChunk = _Chunk('data', sampleBytes.toBytes());
   final riffBody = BytesBuilder();
   riffBody.add('WAVE'.codeUnits);
-  riffBody.add('fmt '.codeUnits);
-  riffBody.add(_le32(16));
-  riffBody.add(_le16(1));
-  riffBody.add(_le16(channels));
-  riffBody.add(_le32(16000));
-  riffBody.add(_le32(16000 * (blockAlign ?? channels * 2)));
-  riffBody.add(_le16(blockAlign ?? channels * 2));
-  riffBody.add(_le16(16));
+  final formatChunk = _Chunk(
+    'fmt ',
+    Uint8List.fromList([
+      ..._le16(formatCode),
+      ..._le16(channels),
+      ..._le32(16000),
+      ..._le32(16000 * (blockAlign ?? channels * 2)),
+      ..._le16(blockAlign ?? channels * 2),
+      ..._le16(bitsPerSample),
+    ]),
+  );
 
-  for (final chunk in [...extraChunks, dataChunk]) {
+  final chunks =
+      dataBeforeFormat
+          ? [...extraChunks, dataChunk, formatChunk]
+          : [...extraChunks, formatChunk, dataChunk];
+
+  for (final chunk in chunks) {
     riffBody.add(chunk.id.codeUnits);
     riffBody.add(_le32(chunk.payload.length));
     riffBody.add(chunk.payload);
@@ -88,5 +99,58 @@ void main() {
     final samples = WavReader.readMono16BitPcmBytes(wavBytes);
 
     expect(samples, isEmpty);
+  });
+
+  test('WavReader downmixes stereo PCM input to mono', () {
+    final wavBytes = _buildTestWav(
+      samples: const [32767, -32768, 16384, 16384],
+      channels: 2,
+    );
+
+    final samples = WavReader.readMono16BitPcmBytes(wavBytes);
+
+    expect(samples, hasLength(2));
+    expect(samples[0], closeTo((-1 / 32768), 0.0001));
+    expect(samples[1], closeTo(0.5, 0.0001));
+  });
+
+  test(
+    'WavReader still reads format metadata when data chunk appears first',
+    () {
+      final wavBytes = _buildTestWav(
+        samples: const [0, 32767, -32768, 0],
+        dataBeforeFormat: true,
+      );
+
+      final samples = WavReader.readMono16BitPcmBytes(wavBytes);
+
+      expect(samples, hasLength(4));
+      expect(samples[0], 0);
+      expect(samples[1], closeTo(32767 / 32768, 0.0001));
+      expect(samples[2], -1);
+      expect(samples[3], 0);
+    },
+  );
+
+  test('WavReader throws for non-PCM WAV data', () {
+    final wavBytes = _buildTestWav(samples: const [0, 32767], formatCode: 3);
+
+    expect(
+      () => WavReader.readMono16BitPcmBytes(wavBytes),
+      throwsA(isA<UnsupportedError>()),
+    );
+  });
+
+  test('WavReader throws for non-16-bit WAV data', () {
+    final wavBytes = _buildTestWav(
+      samples: const [0, 32767],
+      bitsPerSample: 24,
+      blockAlign: 3,
+    );
+
+    expect(
+      () => WavReader.readMono16BitPcmBytes(wavBytes),
+      throwsA(isA<UnsupportedError>()),
+    );
   });
 }

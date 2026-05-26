@@ -17,6 +17,7 @@ class WavReader {
     var bitsPerSample = 0;
     var formatCode = 0;
     var offset = 12;
+    var hasFormatChunk = false;
     int? dataOffset;
     var dataLength = 0;
 
@@ -31,29 +32,36 @@ class WavReader {
       }
 
       if (chunkId == 'fmt ' && chunkSize >= 16) {
+        hasFormatChunk = true;
         formatCode = data.getUint16(chunkDataOffset, Endian.little);
         channels = data.getUint16(chunkDataOffset + 2, Endian.little);
         blockAlign = data.getUint16(chunkDataOffset + 12, Endian.little);
         bitsPerSample = data.getUint16(chunkDataOffset + 14, Endian.little);
-      } else if (chunkId == 'data') {
+      } else if (chunkId == 'data' && dataOffset == null) {
         dataOffset = chunkDataOffset;
         dataLength = chunkSize;
-        break;
       }
 
       offset = chunkDataEnd + (chunkSize.isOdd ? 1 : 0);
     }
 
-    if (dataOffset == null || channels <= 0 || blockAlign <= 0) {
+    if (dataOffset == null ||
+        !hasFormatChunk ||
+        channels <= 0 ||
+        blockAlign <= 0) {
       return const [];
+    }
+
+    if (formatCode != 1) {
+      throw UnsupportedError('Only PCM WAV is supported.');
+    }
+
+    if (bitsPerSample != 16) {
+      throw UnsupportedError('Only 16-bit WAV is supported.');
     }
 
     if (blockAlign != channels * 2) {
       return const [];
-    }
-
-    if (formatCode != 1 || bitsPerSample != 16) {
-      throw UnsupportedError('Only 16-bit PCM WAV is supported.');
     }
 
     final clampedDataLength = min(dataLength, bytes.length - dataOffset);
