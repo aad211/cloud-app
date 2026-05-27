@@ -22,25 +22,15 @@ class HospitalSearchRepository {
 
   final http.Client _client;
   final Uri _endpoint;
+  static final Uri _proxyEndpoint = Uri.parse(
+    'https://r.jina.ai/http://photon.komoot.io/api/',
+  );
+  static const double _bboxHalfSpanKm = 25.0;
 
   Future<List<HospitalRecord>> searchNearbyHospitals(GeoPoint location) async {
-    final uri = _endpoint.replace(
-      queryParameters: <String, String>{
-        'q': 'hospital',
-        'lat': location.latitude.toString(),
-        'lon': location.longitude.toString(),
-        'limit': '12',
-      },
-    );
+    final response = await _fetchNearbyHospitalsResponse(location);
+    final body = _decodeBody(response.body);
 
-    final response = await _client.get(uri);
-    if (response.statusCode != 200) {
-      throw HospitalSearchException(
-        'Failed to load nearby hospitals (${response.statusCode}).',
-      );
-    }
-
-    final body = jsonDecode(response.body);
     if (body is! Map<String, dynamic>) {
       throw const HospitalSearchException(
         'Unexpected hospital search response.',
@@ -67,6 +57,71 @@ class HospitalSearchRepository {
 
     results.sort((left, right) => left.distanceKm.compareTo(right.distanceKm));
     return results;
+  }
+
+  Future<http.Response> _fetchNearbyHospitalsResponse(GeoPoint location) async {
+    final directUri = _endpoint.replace(
+      queryParameters: _buildQueryParameters(location),
+    );
+
+    try {
+      final response = await _client.get(
+        directUri,
+        headers: const {'Accept': 'application/json'},
+      );
+      if (response.statusCode == 200) {
+        return response;
+      }
+      if (_shouldRetryWithProxy(response.statusCode)) {
+        return await _fetchViaProxy(location);
+      }
+      throw HospitalSearchException(
+        'Failed to load nearby hospitals (${response.statusCode}).',
+      );
+    } catch (_) {
+      return _fetchViaProxy(location);
+    }
+  }
+
+  Future<http.Response> _fetchViaProxy(GeoPoint location) async {
+    final proxyUri = _proxyEndpoint.replace(
+      queryParameters: _buildQueryParameters(location),
+    );
+
+    final response = await _client.get(
+      proxyUri,
+      headers: const {'Accept': 'text/plain, application/json'},
+    );
+    if (response.statusCode != 200) {
+      throw HospitalSearchException(
+        'Failed to load nearby hospitals (${response.statusCode}).',
+      );
+    }
+    return response;
+  }
+
+  bool _shouldRetryWithProxy(int statusCode) {
+    return statusCode == 403 || statusCode == 406 || statusCode == 429;
+  }
+
+  Map<String, String> _buildQueryParameters(GeoPoint location) {
+    final latOffset = _bboxHalfSpanKm / 111.32;
+    final lonScale = math
+        .cos(_degToRad(location.latitude))
+        .abs()
+        .clamp(0.01, 1.0);
+    final lonOffset = _bboxHalfSpanKm / (111.32 * lonScale);
+    final west = location.longitude - lonOffset;
+    final south = location.latitude - latOffset;
+    final east = location.longitude + lonOffset;
+    final north = location.latitude + latOffset;
+
+    return <String, String>{
+      'q': 'hospital',
+      'bbox':
+          '${west.toStringAsFixed(6)},${south.toStringAsFixed(6)},${east.toStringAsFixed(6)},${north.toStringAsFixed(6)}',
+      'limit': '100',
+    };
   }
 
   HospitalRecord? _parseFeature(Map<String, dynamic> feature, GeoPoint origin) {
@@ -178,6 +233,23 @@ class HospitalSearchRepository {
   }
 
   static double _degToRad(double degree) => degree * (math.pi / 180.0);
+
+  Object? _decodeBody(String body) {
+    final markerIndex = body.indexOf('Markdown Content:');
+    if (markerIndex == -1) {
+      return jsonDecode(body);
+    }
+
+    final jsonText =
+        body.substring(markerIndex + 'Markdown Content:'.length).trim();
+    if (jsonText.isEmpty) {
+      throw const HospitalSearchException(
+        'Unexpected hospital search response.',
+      );
+    }
+
+    return jsonDecode(jsonText);
+  }
 }
 
 final hospitalSearchRepositoryProvider = Provider<HospitalSearchRepository>((
