@@ -40,9 +40,11 @@ class CheckSymptomsScreen extends ConsumerWidget {
       AnalysisButtonState.success => AppColors.success,
     };
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
         child: Column(
           children: [
             ParityPageHeader(
@@ -287,6 +289,7 @@ class CheckSymptomsScreen extends ConsumerWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }

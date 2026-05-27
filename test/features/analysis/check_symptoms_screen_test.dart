@@ -493,6 +493,32 @@ void main() {
       expect(storage.history, isNotEmpty);
     },
   );
+
+  testWidgets('has PopScope with canPop: true for normal navigation',
+      (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          analysisInferenceBackendProvider.overrideWithValue(
+            _FakeAnalysisInferenceBackend(
+              onInfer: ({
+                required input,
+                required height,
+                required width,
+                required channels,
+              }) async =>
+                  <double>[],
+            ),
+          ),
+        ],
+        child: const MaterialApp(home: CheckSymptomsScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final popScope = tester.widget<PopScope>(find.byType(PopScope));
+    expect(popScope.canPop, isTrue);
+  });
 }
 
 AudioCaptureService _buildAudioCaptureService({
