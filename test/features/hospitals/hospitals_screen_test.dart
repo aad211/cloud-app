@@ -161,4 +161,13 @@ void main() {
       expect(find.text('Riverside Hospital'), findsNothing);
     });
   });
+
+  testWidgets('has PopScope with canPop: true for normal navigation',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: HospitalsScreen()));
+    await tester.pumpAndSettle();
+
+    final popScope = tester.widget<PopScope>(find.byType(PopScope));
+    expect(popScope.canPop, isTrue);
+  });
 }

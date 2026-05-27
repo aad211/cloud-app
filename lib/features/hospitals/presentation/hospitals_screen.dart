@@ -25,9 +25,11 @@ class _HospitalsScreenState extends State<HospitalsScreen> {
   Widget build(BuildContext context) {
     final filtered = _filtered;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 24),
           child: Column(
@@ -150,6 +152,7 @@ class _HospitalsScreenState extends State<HospitalsScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }
