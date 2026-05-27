@@ -73,7 +73,13 @@ class ResultScreen extends ConsumerWidget {
               subtitle: isHistorical
                   ? 'Recorded on ${_dateFmt.format(selectedRecord.date)}'
                   : 'Based on your cough recording',
-              onBack: () => context.go('/home'),
+              onBack: () {
+                if (recordId != null) {
+                  context.go('/history');
+                } else {
+                  context.go('/home');
+                }
+              },
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),

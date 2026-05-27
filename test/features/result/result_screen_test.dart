@@ -286,6 +286,113 @@ void main() {
     expect(find.text('Analysis Result'), findsOneWidget);
     expect(find.text('Based on your cough recording'), findsOneWidget);
   });
+
+  testWidgets('back button navigates to history when viewing historical record',
+      (tester) async {
+    final historyRecord = AnalysisRecord(
+      id: 'historical-123',
+      date: DateTime(2026, 5, 20),
+      condition: 'Healthy',
+      percentage: 85,
+      probabilities: const [
+        ConditionProbability(
+          name: 'Healthy',
+          percentage: 85,
+          hexColor: 0xFF22C55E,
+        ),
+        ConditionProbability(
+          name: 'Bronchitis',
+          percentage: 15,
+          hexColor: 0xFFFAB95B,
+        ),
+      ],
+    );
+
+    final storage =
+        FakeLocalStorageService()..history = [historyRecord.toJson()];
+
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, __) => ResultScreen(recordId: 'historical-123'),
+        ),
+        GoRoute(
+          path: '/history',
+          builder: (_, __) => const Scaffold(body: Text('History')),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(storage),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    // Tap back button
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    expect(find.text('History'), findsOneWidget);
+  });
+
+  testWidgets('back button navigates to home when viewing fresh analysis',
+      (tester) async {
+    final freshRecord = AnalysisRecord(
+      id: 'fresh-123',
+      date: DateTime.now(),
+      condition: 'Healthy',
+      percentage: 90,
+      probabilities: const [
+        ConditionProbability(
+          name: 'Healthy',
+          percentage: 90,
+          hexColor: 0xFF22C55E,
+        ),
+        ConditionProbability(
+          name: 'Bronchitis',
+          percentage: 10,
+          hexColor: 0xFFFAB95B,
+        ),
+      ],
+    );
+
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, __) => const ResultScreen(),
+        ),
+        GoRoute(
+          path: '/home',
+          builder: (_, __) => const Scaffold(body: Text('Home')),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          latestAnalysisProvider.overrideWith((ref) => freshRecord),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    // Tap back button
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Home'), findsOneWidget);
+  });
 }
 
 AnalysisRecord _latestRecord() {
