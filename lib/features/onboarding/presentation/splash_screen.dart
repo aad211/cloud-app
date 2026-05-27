@@ -75,8 +75,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   children: [
                     SvgPicture.asset(
                       'assets/images/cloud_logo_icon.svg',
-                      width: 192,
-                      height: 192,
+                      width: 120,
+                      height: 120,
                       colorFilter: const ColorFilter.mode(
                         Colors.white,
                         BlendMode.srcIn,

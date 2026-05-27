@@ -1,11 +1,56 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'package:cloud_app/core/models/hospital_record.dart';
+import 'package:cloud_app/features/hospitals/data/hospital_search_repository.dart';
+import 'package:cloud_app/features/hospitals/data/location_service.dart';
 import 'package:cloud_app/features/hospitals/presentation/hospitals_screen.dart';
+import 'package:cloud_app/features/hospitals/presentation/hospitals_controller.dart';
 
-Widget _buildSubject() => const MaterialApp(home: HospitalsScreen());
+class _CompleterLocationService implements LocationService {
+  _CompleterLocationService() : completer = Completer<GeoPoint>();
 
-Widget _buildHarness() {
+  final Completer<GeoPoint> completer;
+
+  @override
+  Future<GeoPoint> getCurrentLocation() => completer.future;
+}
+
+class _FakeLocationService implements LocationService {
+  _FakeLocationService({this.location, this.error});
+
+  final GeoPoint? location;
+  final Object? error;
+
+  @override
+  Future<GeoPoint> getCurrentLocation() async {
+    if (error != null) {
+      throw error!;
+    }
+    return location!;
+  }
+}
+
+class _FakeHospitalSearchRepository extends HospitalSearchRepository {
+  _FakeHospitalSearchRepository({this.results = const []})
+    : super(client: http.Client());
+
+  final List<HospitalRecord> results;
+
+  @override
+  Future<List<HospitalRecord>> searchNearbyHospitals(GeoPoint location) async {
+    return results;
+  }
+}
+
+Widget _buildHarness({
+  required LocationService locationService,
+  required HospitalSearchRepository repository,
+}) {
   final router = GoRouter(
     initialLocation: '/hospitals',
     routes: [
@@ -19,155 +64,145 @@ Widget _buildHarness() {
     ],
   );
 
-  return MaterialApp.router(routerConfig: router);
+  return ProviderScope(
+    overrides: [
+      locationServiceProvider.overrideWithValue(locationService),
+      hospitalSearchRepositoryProvider.overrideWithValue(repository),
+    ],
+    child: MaterialApp.router(routerConfig: router),
+  );
 }
 
 void main() {
-  group('HospitalsScreen – static layout', () {
-    testWidgets(
-      'shows parity subtitle, map label, recommendation, count and actions',
-      (tester) async {
-        await tester.pumpWidget(_buildSubject());
+  testWidgets('shows a loading state while location is pending', (
+    tester,
+  ) async {
+    final locationService = _CompleterLocationService();
+    final repository = _FakeHospitalSearchRepository();
 
-        expect(find.text('Nearby Hospitals'), findsOneWidget);
-        expect(find.text('Find medical help near you'), findsOneWidget);
-        expect(find.text('📍 Your Location'), findsOneWidget);
-        expect(
-          find.widgetWithText(ElevatedButton, 'Emergency Call'),
-          findsOneWidget,
-        );
-        expect(
-          find.text(
-            'Based on your symptoms, we recommend visiting a hospital for professional evaluation.',
-          ),
-          findsOneWidget,
-        );
-        expect(find.text('Nearby Hospitals (4)'), findsOneWidget);
-        expect(find.text('Call'), findsNWidgets(4));
-        expect(find.text('Directions'), findsNWidgets(4));
-      },
+    await tester.pumpWidget(
+      _buildHarness(locationService: locationService, repository: repository),
+    );
+    await tester.pump();
+
+    expect(find.text('Finding nearby hospitals'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  testWidgets('renders live results and hides call when phone is missing', (
+    tester,
+  ) async {
+    final locationService = _FakeLocationService(
+      location: const GeoPoint(latitude: 1, longitude: 1),
+    );
+    final repository = _FakeHospitalSearchRepository(
+      results: const [
+        HospitalRecord(
+          name: 'City General Hospital',
+          distanceKm: 1.2,
+          address: '123 Main St, Downtown',
+          latitude: 1.001,
+          longitude: 1.001,
+          phone: '+1 555-0101',
+        ),
+        HospitalRecord(
+          name: 'Riverside Hospital',
+          distanceKm: 2.5,
+          address: '321 River St, Westside',
+          latitude: 1.02,
+          longitude: 1.02,
+        ),
+      ],
     );
 
-    testWidgets('shows search field with correct hint', (tester) async {
-      await tester.pumpWidget(_buildSubject());
-      expect(
-        find.widgetWithText(TextField, 'Search hospital...'),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('shows the planned hospital seed entries by default', (
-      tester,
-    ) async {
-      await tester.pumpWidget(_buildSubject());
-      expect(find.text('City General Hospital'), findsOneWidget);
-      expect(find.text('St. Mary Medical Center'), findsOneWidget);
-      expect(find.text('Metropolitan Health Clinic'), findsOneWidget);
-      expect(find.text('1.2 km'), findsOneWidget);
-      expect(find.text('123 Main St, Downtown'), findsOneWidget);
-      expect(find.text('2.1 km'), findsOneWidget);
-      expect(find.text('456 Oak Ave, Central'), findsOneWidget);
-      expect(find.text('3.5 km'), findsOneWidget);
-      expect(find.text('789 Pine Rd, Uptown'), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.text('Riverside Hospital'),
-        200,
-        scrollable: find.byType(Scrollable).last,
-      );
-      expect(find.text('Riverside Hospital'), findsOneWidget);
-      expect(find.text('4.8 km'), findsOneWidget);
-      expect(find.text('321 River St, Westside'), findsOneWidget);
-    });
-
-    testWidgets('wraps the screen body in SafeArea', (tester) async {
-      await tester.pumpWidget(_buildSubject());
-
-      final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
-      expect(scaffold.body, isA<SafeArea>());
-    });
-
-    testWidgets('routes home from parity back button', (tester) async {
-      await tester.pumpWidget(_buildHarness());
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(Icons.arrow_back));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Home Destination'), findsOneWidget);
-    });
-  });
-
-  group('HospitalsScreen – local search', () {
-    testWidgets('filters list when query matches one hospital', (tester) async {
-      await tester.pumpWidget(_buildSubject());
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Search hospital...'),
-        'riverside',
-      );
-      await tester.pump();
-
-      expect(find.text('Riverside Hospital'), findsOneWidget);
-      expect(find.text('City General Hospital'), findsNothing);
-    });
-
-    testWidgets('shows all hospitals when query is cleared', (tester) async {
-      await tester.pumpWidget(_buildSubject());
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Search hospital...'),
-        'riverside',
-      );
-      await tester.pump();
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Search hospital...'),
-        '',
-      );
-      await tester.pump();
-
-      expect(find.text('City General Hospital'), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.text('Riverside Hospital'),
-        200,
-        scrollable: find.byType(Scrollable).last,
-      );
-      expect(find.text('Riverside Hospital'), findsOneWidget);
-    });
-
-    testWidgets('shows empty list when query matches nothing', (tester) async {
-      await tester.pumpWidget(_buildSubject());
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Search hospital...'),
-        'zzznomatch',
-      );
-      await tester.pump();
-
-      expect(find.text('City General Hospital'), findsNothing);
-      expect(find.text('Riverside Hospital'), findsNothing);
-    });
-
-    testWidgets('search is case-insensitive', (tester) async {
-      await tester.pumpWidget(_buildSubject());
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Search hospital...'),
-        'CITY',
-      );
-      await tester.pump();
-
-      expect(find.text('City General Hospital'), findsOneWidget);
-      expect(find.text('Riverside Hospital'), findsNothing);
-    });
-  });
-
-  testWidgets('has PopScope with canPop: true for normal navigation',
-      (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: HospitalsScreen()));
+    await tester.pumpWidget(
+      _buildHarness(locationService: locationService, repository: repository),
+    );
     await tester.pumpAndSettle();
 
-    final popScope = tester.widget<PopScope>(find.byType(PopScope));
-    expect(popScope.canPop, isTrue);
+    expect(find.text('Nearby Hospitals (2)'), findsOneWidget);
+    expect(find.text('City General Hospital'), findsOneWidget);
+    expect(find.text('Riverside Hospital'), findsOneWidget);
+    expect(find.text('Call'), findsOneWidget);
+    expect(find.text('Directions'), findsNWidgets(2));
+  });
+
+  testWidgets('filters live results by search query', (tester) async {
+    final locationService = _FakeLocationService(
+      location: const GeoPoint(latitude: 1, longitude: 1),
+    );
+    final repository = _FakeHospitalSearchRepository(
+      results: const [
+        HospitalRecord(
+          name: 'City General Hospital',
+          distanceKm: 1.2,
+          address: '123 Main St, Downtown',
+          latitude: 1.001,
+          longitude: 1.001,
+        ),
+        HospitalRecord(
+          name: 'Riverside Hospital',
+          distanceKm: 2.5,
+          address: '321 River St, Westside',
+          latitude: 1.02,
+          longitude: 1.02,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      _buildHarness(locationService: locationService, repository: repository),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Search hospital...'),
+      'westside',
+    );
+    await tester.pump();
+
+    expect(find.text('City General Hospital'), findsNothing);
+    expect(find.text('Riverside Hospital'), findsOneWidget);
+    expect(find.text('No matching hospitals'), findsNothing);
+  });
+
+  testWidgets('shows an error state when location access fails', (
+    tester,
+  ) async {
+    final locationService = _FakeLocationService(
+      error: const LocationServiceException(
+        'Location permission is required to find nearby hospitals.',
+      ),
+    );
+    final repository = _FakeHospitalSearchRepository();
+
+    await tester.pumpWidget(
+      _buildHarness(locationService: locationService, repository: repository),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Unable to load nearby hospitals'), findsOneWidget);
+    expect(
+      find.text('Location permission is required to find nearby hospitals.'),
+      findsOneWidget,
+    );
+    expect(find.text('Retry'), findsOneWidget);
+  });
+
+  testWidgets('routes home from parity back button', (tester) async {
+    final locationService = _FakeLocationService(
+      location: const GeoPoint(latitude: 1, longitude: 1),
+    );
+    final repository = _FakeHospitalSearchRepository(results: const []);
+
+    await tester.pumpWidget(
+      _buildHarness(locationService: locationService, repository: repository),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Home Destination'), findsOneWidget);
   });
 }

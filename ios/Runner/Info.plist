@@ -47,5 +47,7 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>CLOUD App needs microphone access to record your cough for analysis.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>CLOUD App needs location access to find nearby hospitals.</string>
 </dict>
 </plist>
