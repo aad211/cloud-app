@@ -24,6 +24,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Quick Actions'), findsOneWidget);
 
+    await tester.scrollUntilVisible(
+      find.text('History'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('History'));
     await tester.pumpAndSettle();
     expect(find.text('Symptom History'), findsOneWidget);
