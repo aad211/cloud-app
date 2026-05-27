@@ -147,6 +147,53 @@ void main() {
     // Should build without error
     expect(find.byType(ResultScreen), findsOneWidget);
   });
+
+  testWidgets('shows historical record when recordId matches', (tester) async {
+    final historyRecord = AnalysisRecord(
+      id: 'historical-123',
+      date: DateTime(2026, 5, 20, 10, 0),
+      condition: 'Bronchitis',
+      percentage: 75,
+      probabilities: const [
+        ConditionProbability(
+          name: 'Bronchitis',
+          percentage: 75,
+          hexColor: 0xFFFAB95B,
+        ),
+        ConditionProbability(
+          name: 'Healthy',
+          percentage: 25,
+          hexColor: 0xFF22C55E,
+        ),
+      ],
+    );
+
+    final storage =
+        FakeLocalStorageService()..history = [historyRecord.toJson()];
+
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, __) => ResultScreen(recordId: 'historical-123'),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(storage),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bronchitis'), findsWidgets);
+    expect(find.text('75%'), findsNWidgets(2));
+  });
 }
 
 AnalysisRecord _latestRecord() {

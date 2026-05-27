@@ -20,6 +20,7 @@ class ResultScreen extends ConsumerWidget {
     final latestRecord = ref.watch(latestAnalysisProvider);
     final historyAsync = ref.watch(analysisHistoryProvider);
     final selectedRecord = _resolveRecord(
+      recordId,
       latestRecord,
       historyAsync.valueOrNull,
     );
@@ -225,15 +226,29 @@ class ResultScreen extends ConsumerWidget {
 }
 
 AnalysisRecord? _resolveRecord(
+  String? recordId,
   AnalysisRecord? latestRecord,
   List<AnalysisRecord>? history,
 ) {
+  // Priority 1: Explicit recordId from route parameter
+  if (recordId != null && history != null) {
+    try {
+      return history.firstWhere((r) => r.id == recordId);
+    } catch (_) {
+      // Record not found in history, fall through to latest
+    }
+  }
+
+  // Priority 2: Latest analysis from fresh recording
   if (latestRecord != null) {
     return latestRecord;
   }
+
+  // Priority 3: Most recent from history if no latest
   if (history != null && history.isNotEmpty) {
     return history.first;
   }
+
   return null;
 }
 
