@@ -113,8 +113,8 @@ class ResultScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           _RiskBadge(
-                            text: summary.riskLabel,
-                            color: summary.riskColor,
+                            text: 'Primary Result',
+                            color: AppColors.navy,
                           ),
                           const SizedBox(height: 20),
                           const Text(

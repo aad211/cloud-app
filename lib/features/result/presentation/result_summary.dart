@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_app/app/theme/app_colors.dart';
 import 'package:cloud_app/core/models/analysis_record.dart';
 import 'package:cloud_app/core/models/condition_probability.dart';
@@ -10,12 +9,6 @@ class ResultSummary {
   final List<ConditionProbability> probabilities;
 
   ConditionProbability get primaryProbability => probabilities.first;
-
-  String get riskLabel =>
-      primaryProbability.percentage >= 60 ? 'Medium Risk' : 'Low Risk';
-
-  Color get riskColor =>
-      primaryProbability.percentage >= 60 ? AppColors.gold : AppColors.success;
 }
 
 ResultSummary buildResultSummary([AnalysisRecord? record]) {
