@@ -20,9 +20,11 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
         child: Column(
           children: [
             ParityPageHeader(
@@ -69,6 +71,7 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 }

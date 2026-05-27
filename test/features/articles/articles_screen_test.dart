@@ -94,4 +94,13 @@ void main() {
     );
     expect(find.text('World No Tobacco Day Campaign Launched'), findsOneWidget);
   });
+
+  testWidgets('has PopScope with canPop: true for normal navigation',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: ArticlesScreen()));
+    await tester.pumpAndSettle();
+
+    final popScope = tester.widget<PopScope>(find.byType(PopScope));
+    expect(popScope.canPop, isTrue);
+  });
 }
