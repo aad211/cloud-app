@@ -470,4 +470,61 @@ void main() {
       expect(find.text('No History Yet'), findsOneWidget);
     });
   });
+
+  testWidgets('tapping record card navigates to result with recordId',
+      (tester) async {
+    final record = AnalysisRecord(
+      id: 'tap-test-123',
+      date: DateTime(2026, 5, 20, 14, 30),
+      condition: 'Bronchitis',
+      percentage: 65,
+    );
+
+    final storage = FakeLocalStorageService()
+      ..history = [record.toJson()];
+
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, __) => ProviderScope(
+            overrides: [localStorageServiceProvider.overrideWithValue(storage)],
+            child: const HistoryScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/home',
+          builder: (_, __) => const Scaffold(body: Text('Home')),
+        ),
+        GoRoute(
+          path: '/result',
+          builder: (context, state) {
+            final recordId = state.uri.queryParameters['recordId'];
+            return Scaffold(
+              body: Text('Result: $recordId'),
+            );
+          },
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [localStorageServiceProvider.overrideWithValue(storage)],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    // Find and tap the record card
+    final cardFinder = find.text('Bronchitis');
+    expect(cardFinder, findsOneWidget);
+
+    await tester.tap(cardFinder);
+    await tester.pumpAndSettle();
+
+    // Should navigate to result screen with recordId
+    expect(find.text('Result: tap-test-123'), findsOneWidget);
+  });
 }

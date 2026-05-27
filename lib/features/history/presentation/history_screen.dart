@@ -253,8 +253,11 @@ class _RecordCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final visuals = conditionVisualsFor(record.condition);
 
-    return ParityGradientCard(
-      child: Column(
+    return InkWell(
+      onTap: () => context.go('/result?recordId=${record.id}'),
+      borderRadius: BorderRadius.circular(20),
+      child: ParityGradientCard(
+        child: Column(
         children: [
           Text(visuals.emoji, style: const TextStyle(fontSize: 48)),
           const SizedBox(height: 8),
@@ -331,6 +334,7 @@ class _RecordCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
