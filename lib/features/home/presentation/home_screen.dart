@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +8,7 @@ import 'package:cloud_app/core/models/analysis_record.dart';
 import 'package:cloud_app/core/widgets/parity_cards.dart';
 import 'package:cloud_app/features/analysis/presentation/analysis_history_controller.dart';
 import 'package:cloud_app/core/widgets/cloud_logo.dart';
+import 'package:cloud_app/core/widgets/exit_confirmation_dialog.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -34,10 +36,19 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final historyAsync = ref.watch(analysisHistoryProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final shouldExit = await showExitConfirmationDialog(context);
+        if (shouldExit && context.mounted) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,6 +154,7 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

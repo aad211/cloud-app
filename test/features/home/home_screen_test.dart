@@ -335,4 +335,36 @@ void main() {
       expect(find.byType(HomeScreen), findsOneWidget);
     });
   });
+
+  group('Exit Confirmation', () {
+    testWidgets('shows exit dialog on back gesture', (tester) async {
+      await tester.pumpWidget(_buildHome(storage: FakeLocalStorageService()));
+      await tester.pumpAndSettle();
+
+      // Simulate back gesture (PopScope will intercept)
+      final dynamic widgetsAppState = tester.state(find.byType(WidgetsApp));
+      await widgetsAppState.didPopRoute();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Exit App?'), findsOneWidget);
+      expect(find.text('Are you sure you want to exit CLOUD?'), findsOneWidget);
+    });
+
+    testWidgets('dialog Cancel keeps user on home screen', (tester) async {
+      await tester.pumpWidget(_buildHome(storage: FakeLocalStorageService()));
+      await tester.pumpAndSettle();
+
+      // Trigger back
+      final dynamic widgetsAppState = tester.state(find.byType(WidgetsApp));
+      await widgetsAppState.didPopRoute();
+      await tester.pumpAndSettle();
+
+      // Cancel
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(find.text('Exit App?'), findsNothing);
+    });
+  });
 }
