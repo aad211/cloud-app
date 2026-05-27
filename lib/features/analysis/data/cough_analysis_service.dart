@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_flutter/core/models/analysis_record.dart';
-import 'package:cloud_flutter/core/models/condition_probability.dart';
-import 'package:cloud_flutter/features/analysis/data/analysis_inference_backend.dart';
-import 'package:cloud_flutter/features/analysis/data/mel_spectrogram.dart';
-import 'package:cloud_flutter/features/analysis/data/spectrogram_export_service.dart';
-import 'package:cloud_flutter/features/analysis/data/wav_reader.dart';
-import 'package:cloud_flutter/features/analysis/domain/recorded_cough.dart';
+import 'package:cloud_app/core/models/analysis_record.dart';
+import 'package:cloud_app/core/models/condition_probability.dart';
+import 'package:cloud_app/features/analysis/data/analysis_inference_backend.dart';
+import 'package:cloud_app/features/analysis/data/mel_spectrogram.dart';
+import 'package:cloud_app/features/analysis/data/spectrogram_export_service.dart';
+import 'package:cloud_app/features/analysis/data/wav_reader.dart';
+import 'package:cloud_app/features/analysis/domain/recorded_cough.dart';
 
 import 'native_tflite_inference_backend.dart'
     if (dart.library.js_interop) 'web_js_inference_backend.dart'

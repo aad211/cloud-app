@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:cloud_flutter/app/theme/app_colors.dart';
-import 'package:cloud_flutter/core/models/analysis_record.dart';
-import 'package:cloud_flutter/core/widgets/parity_cards.dart';
-import 'package:cloud_flutter/features/analysis/presentation/analysis_history_controller.dart';
+import 'package:cloud_app/app/theme/app_colors.dart';
+import 'package:cloud_app/core/models/analysis_record.dart';
+import 'package:cloud_app/core/widgets/parity_cards.dart';
+import 'package:cloud_app/features/analysis/presentation/analysis_history_controller.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});

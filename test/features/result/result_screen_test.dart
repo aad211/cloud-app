@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cloud_flutter/core/models/analysis_record.dart';
-import 'package:cloud_flutter/core/models/condition_probability.dart';
-import 'package:cloud_flutter/core/storage/local_storage_service.dart';
-import 'package:cloud_flutter/features/analysis/presentation/latest_analysis_provider.dart';
-import 'package:cloud_flutter/features/result/presentation/result_screen.dart';
-import 'package:cloud_flutter/features/result/presentation/result_summary.dart';
+import 'package:cloud_app/core/models/analysis_record.dart';
+import 'package:cloud_app/core/models/condition_probability.dart';
+import 'package:cloud_app/core/storage/local_storage_service.dart';
+import 'package:cloud_app/features/analysis/presentation/latest_analysis_provider.dart';
+import 'package:cloud_app/features/result/presentation/result_screen.dart';
+import 'package:cloud_app/features/result/presentation/result_summary.dart';
 
 import '../../test_helpers/fake_local_storage_service.dart';
 

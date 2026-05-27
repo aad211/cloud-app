@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cloud_flutter/app/theme/app_colors.dart';
-import 'package:cloud_flutter/core/models/article_record.dart';
-import 'package:cloud_flutter/core/models/news_record.dart';
-import 'package:cloud_flutter/core/widgets/parity_cards.dart';
-import 'package:cloud_flutter/core/widgets/parity_page_header.dart';
-import 'package:cloud_flutter/features/articles/data/articles_seed.dart';
-import 'package:cloud_flutter/features/articles/data/news_seed.dart';
+import 'package:cloud_app/app/theme/app_colors.dart';
+import 'package:cloud_app/core/models/article_record.dart';
+import 'package:cloud_app/core/models/news_record.dart';
+import 'package:cloud_app/core/widgets/parity_cards.dart';
+import 'package:cloud_app/core/widgets/parity_page_header.dart';
+import 'package:cloud_app/features/articles/data/articles_seed.dart';
+import 'package:cloud_app/features/articles/data/news_seed.dart';
 
 class ArticlesScreen extends StatefulWidget {
   const ArticlesScreen({super.key});

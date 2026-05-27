@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cloud_flutter/core/storage/local_storage_service.dart';
-import 'package:cloud_flutter/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:cloud_app/core/storage/local_storage_service.dart';
+import 'package:cloud_app/features/onboarding/presentation/onboarding_screen.dart';
 
 import '../../test_helpers/fake_local_storage_service.dart';
 

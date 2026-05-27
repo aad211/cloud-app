@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cloud_flutter/features/articles/presentation/articles_screen.dart';
+import 'package:cloud_app/features/articles/presentation/articles_screen.dart';
 
 Widget _buildHarness() {
   final router = GoRouter(

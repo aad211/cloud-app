@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:cloud_flutter/features/analysis/data/mel_spectrogram.dart';
+import 'package:cloud_app/features/analysis/data/mel_spectrogram.dart';
 
 void main() {
   test('MelSpectrogram returns melBins by exact frame count output', () {

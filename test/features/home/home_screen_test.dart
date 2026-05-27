@@ -4,9 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:cloud_flutter/core/models/analysis_record.dart';
-import 'package:cloud_flutter/core/storage/local_storage_service.dart';
-import 'package:cloud_flutter/features/home/presentation/home_screen.dart';
+import 'package:cloud_app/core/models/analysis_record.dart';
+import 'package:cloud_app/core/storage/local_storage_service.dart';
+import 'package:cloud_app/features/home/presentation/home_screen.dart';
 
 import '../../test_helpers/fake_local_storage_service.dart';
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cloud_flutter/app/theme/app_colors.dart';
-import 'package:cloud_flutter/core/widgets/parity_cards.dart';
-import 'package:cloud_flutter/core/widgets/parity_page_header.dart';
+import 'package:cloud_app/app/theme/app_colors.dart';
+import 'package:cloud_app/core/widgets/parity_cards.dart';
+import 'package:cloud_app/core/widgets/parity_page_header.dart';
 import 'check_symptoms_controller.dart';
 
 class CheckSymptomsScreen extends ConsumerWidget {

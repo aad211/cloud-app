@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:cloud_flutter/features/analysis/data/wav_reader.dart';
+import 'package:cloud_app/features/analysis/data/wav_reader.dart';
 
 Uint8List _le16(int value) {
   final data = ByteData(2)..setInt16(0, value, Endian.little);

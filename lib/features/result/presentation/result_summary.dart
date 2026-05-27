@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_flutter/app/theme/app_colors.dart';
-import 'package:cloud_flutter/core/models/analysis_record.dart';
-import 'package:cloud_flutter/core/models/condition_probability.dart';
+import 'package:cloud_app/app/theme/app_colors.dart';
+import 'package:cloud_app/core/models/analysis_record.dart';
+import 'package:cloud_app/core/models/condition_probability.dart';
 
 class ResultSummary {
   const ResultSummary({required this.record, required this.probabilities});

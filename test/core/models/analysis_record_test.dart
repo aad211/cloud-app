@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:cloud_flutter/core/models/analysis_record.dart';
-import 'package:cloud_flutter/core/models/condition_probability.dart';
+import 'package:cloud_app/core/models/analysis_record.dart';
+import 'package:cloud_app/core/models/condition_probability.dart';
 
 void main() {
   test('AnalysisRecord keeps old JSON readable and round-trips new fields', () {

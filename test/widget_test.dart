@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:cloud_flutter/app/app.dart';
-import 'package:cloud_flutter/core/storage/local_storage_service.dart';
+import 'package:cloud_app/app/app.dart';
+import 'package:cloud_app/core/storage/local_storage_service.dart';
 
 import 'test_helpers/fake_local_storage_service.dart';
 

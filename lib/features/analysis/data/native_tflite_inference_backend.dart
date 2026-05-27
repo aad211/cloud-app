@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:cloud_flutter/features/analysis/data/analysis_inference_backend.dart';
+import 'package:cloud_app/features/analysis/data/analysis_inference_backend.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 class NativeTfliteInferenceBackend implements AnalysisInferenceBackend {

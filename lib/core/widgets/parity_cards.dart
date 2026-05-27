@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_flutter/app/theme/app_colors.dart';
+import 'package:cloud_app/app/theme/app_colors.dart';
 
 class ParityGradientCard extends StatelessWidget {
   const ParityGradientCard({super.key, required this.child});
