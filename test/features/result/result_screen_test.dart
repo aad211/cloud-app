@@ -134,6 +134,19 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Hospitals Destination'), findsOneWidget);
   });
+
+  testWidgets('accepts optional recordId parameter', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: ResultScreen(recordId: 'test-id'),
+        ),
+      ),
+    );
+
+    // Should build without error
+    expect(find.byType(ResultScreen), findsOneWidget);
+  });
 }
 
 AnalysisRecord _latestRecord() {

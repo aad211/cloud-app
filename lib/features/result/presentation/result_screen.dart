@@ -11,7 +11,9 @@ import 'package:cloud_app/features/analysis/presentation/latest_analysis_provide
 import 'package:cloud_app/features/result/presentation/result_summary.dart';
 
 class ResultScreen extends ConsumerWidget {
-  const ResultScreen({super.key});
+  const ResultScreen({super.key, this.recordId});
+
+  final String? recordId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
