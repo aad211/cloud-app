@@ -60,7 +60,7 @@ class ResultScreen extends ConsumerWidget {
     final summary = buildResultSummary(selectedRecord);
     final record = summary.record;
     final items = summary.probabilities;
-    final isHistorical = recordId != null && selectedRecord != null;
+    final isHistorical = recordId != null;
 
     return Scaffold(
       backgroundColor: Colors.white,
