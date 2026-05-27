@@ -138,9 +138,7 @@ void main() {
   testWidgets('accepts optional recordId parameter', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
-        child: MaterialApp(
-          home: ResultScreen(recordId: 'test-id'),
-        ),
+        child: MaterialApp(home: ResultScreen(recordId: 'test-id')),
       ),
     );
 
@@ -182,9 +180,7 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(storage),
-        ],
+        overrides: [localStorageServiceProvider.overrideWithValue(storage)],
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -195,8 +191,9 @@ void main() {
     expect(find.text('75%'), findsNWidgets(2));
   });
 
-  testWidgets('shows historical header when viewing historical record',
-      (tester) async {
+  testWidgets('shows historical header when viewing historical record', (
+    tester,
+  ) async {
     final historyRecord = AnalysisRecord(
       id: 'historical-123',
       date: DateTime(2026, 5, 20, 10, 0),
@@ -230,9 +227,7 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(storage),
-        ],
+        overrides: [localStorageServiceProvider.overrideWithValue(storage)],
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -264,19 +259,12 @@ void main() {
     );
 
     final router = GoRouter(
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (_, __) => const ResultScreen(),
-        ),
-      ],
+      routes: [GoRoute(path: '/', builder: (_, __) => const ResultScreen())],
     );
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          latestAnalysisProvider.overrideWith((ref) => freshRecord),
-        ],
+        overrides: [latestAnalysisProvider.overrideWith((ref) => freshRecord)],
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -287,8 +275,64 @@ void main() {
     expect(find.text('Based on your cough recording'), findsOneWidget);
   });
 
-  testWidgets('back button navigates to history when viewing historical record',
-      (tester) async {
+  testWidgets(
+    'back button navigates to history when viewing historical record',
+    (tester) async {
+      final historyRecord = AnalysisRecord(
+        id: 'historical-123',
+        date: DateTime(2026, 5, 20),
+        condition: 'Healthy',
+        percentage: 85,
+        probabilities: const [
+          ConditionProbability(
+            name: 'Healthy',
+            percentage: 85,
+            hexColor: 0xFF22C55E,
+          ),
+          ConditionProbability(
+            name: 'Bronchitis',
+            percentage: 15,
+            hexColor: 0xFFFAB95B,
+          ),
+        ],
+      );
+
+      final storage =
+          FakeLocalStorageService()..history = [historyRecord.toJson()];
+
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, __) => ResultScreen(recordId: 'historical-123'),
+          ),
+          GoRoute(
+            path: '/history',
+            builder: (_, __) => const Scaffold(body: Text('History')),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [localStorageServiceProvider.overrideWithValue(storage)],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Tap back button
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      expect(find.text('History'), findsOneWidget);
+    },
+  );
+
+  testWidgets('system back gesture pops to history from historical result', (
+    tester,
+  ) async {
     final historyRecord = AnalysisRecord(
       id: 'historical-123',
       date: DateTime(2026, 5, 20),
@@ -312,38 +356,54 @@ void main() {
         FakeLocalStorageService()..history = [historyRecord.toJson()];
 
     final router = GoRouter(
+      initialLocation: '/history',
       routes: [
         GoRoute(
-          path: '/',
-          builder: (_, __) => ResultScreen(recordId: 'historical-123'),
+          path: '/history',
+          builder:
+              (context, state) => Scaffold(
+                body: Center(
+                  child: FilledButton(
+                    onPressed:
+                        () => context.push('/result?recordId=historical-123'),
+                    child: const Text('Open Result'),
+                  ),
+                ),
+              ),
         ),
         GoRoute(
-          path: '/history',
-          builder: (_, __) => const Scaffold(body: Text('History')),
+          path: '/result',
+          builder: (context, state) {
+            final recordId = state.uri.queryParameters['recordId'];
+            return ResultScreen(recordId: recordId);
+          },
         ),
       ],
     );
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(storage),
-        ],
+        overrides: [localStorageServiceProvider.overrideWithValue(storage)],
         child: MaterialApp.router(routerConfig: router),
       ),
     );
-
     await tester.pumpAndSettle();
 
-    // Tap back button
-    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.tap(find.text('Open Result'));
     await tester.pumpAndSettle();
 
-    expect(find.text('History'), findsOneWidget);
+    expect(find.text('Historical Record'), findsOneWidget);
+
+    final didPop = await router.routerDelegate.popRoute();
+    expect(didPop, isTrue);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Open Result'), findsOneWidget);
   });
 
-  testWidgets('back button navigates to home when viewing fresh analysis',
-      (tester) async {
+  testWidgets('back button navigates to home when viewing fresh analysis', (
+    tester,
+  ) async {
     final freshRecord = AnalysisRecord(
       id: 'fresh-123',
       date: DateTime.now(),
@@ -365,10 +425,7 @@ void main() {
 
     final router = GoRouter(
       routes: [
-        GoRoute(
-          path: '/',
-          builder: (_, __) => const ResultScreen(),
-        ),
+        GoRoute(path: '/', builder: (_, __) => const ResultScreen()),
         GoRoute(
           path: '/home',
           builder: (_, __) => const Scaffold(body: Text('Home')),
@@ -378,9 +435,7 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          latestAnalysisProvider.overrideWith((ref) => freshRecord),
-        ],
+        overrides: [latestAnalysisProvider.overrideWith((ref) => freshRecord)],
         child: MaterialApp.router(routerConfig: router),
       ),
     );

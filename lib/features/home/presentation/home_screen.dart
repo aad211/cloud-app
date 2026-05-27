@@ -13,7 +13,8 @@ import 'package:cloud_app/features/analysis/presentation/analysis_history_contro
 import 'package:cloud_app/core/widgets/cloud_logo.dart';
 import 'package:cloud_app/core/widgets/exit_confirmation_dialog.dart';
 
-typedef OpenLinkHandler = Future<bool> Function(BuildContext context, String url);
+typedef OpenLinkHandler =
+    Future<bool> Function(BuildContext context, String url);
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key, this.openLink = _defaultOpenLink});
@@ -43,115 +44,112 @@ class HomeScreen extends ConsumerWidget {
         backgroundColor: Colors.white,
         body: SafeArea(
           child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const CloudLogo(size: CloudLogoSize.medium),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Cough Lung Observation & Diagnosis',
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelSmall
-                          ?.copyWith(color: AppColors.blue),
-                      textAlign: TextAlign.center,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Cough Lung Observation & Diagnosis',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelSmall?.copyWith(color: AppColors.blue),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 20),
-              historyAsync.when(
-                loading: () => const _AnalysisLoadingCard(),
-                error: (_, __) => const _AnalysisErrorCard(),
-                data:
-                    (history) =>
-                        history.isEmpty
-                            ? const _EmptyAnalysisCard()
-                            : _LatestAnalysisCard(record: history.first),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Quick Actions',
-                style: Theme.of(
-                  context,
-                ).textTheme.labelMedium?.copyWith(color: AppColors.navy),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => context.push('/check-symptoms'),
-                  icon: const Icon(Icons.monitor_heart),
-                  label: const Text('Check Symptoms'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.gold,
-                    foregroundColor: AppColors.navy,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                const SizedBox(height: 20),
+                historyAsync.when(
+                  loading: () => const _AnalysisLoadingCard(),
+                  error: (_, __) => const _AnalysisErrorCard(),
+                  data:
+                      (history) =>
+                          history.isEmpty
+                              ? const _EmptyAnalysisCard()
+                              : _LatestAnalysisCard(record: history.first),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Quick Actions',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelMedium?.copyWith(color: AppColors.navy),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => context.push('/check-symptoms'),
+                    icon: const Icon(Icons.monitor_heart),
+                    label: const Text('Check Symptoms'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.gold,
+                      foregroundColor: AppColors.navy,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _SecondaryActionButton(
-                    icon: Icons.article_outlined,
-                    label: 'Articles',
-                    onTap: () => context.push('/articles'),
-                  ),
-                  const SizedBox(width: 12),
-                  _SecondaryActionButton(
-                    icon: Icons.history,
-                    label: 'History',
-                    onTap: () => context.push('/history'),
-                  ),
-                  const SizedBox(width: 12),
-                  _SecondaryActionButton(
-                    icon: Icons.local_hospital_outlined,
-                    label: 'Hospital',
-                    onTap: () => context.push('/hospitals'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Health Insights',
-                style: Theme.of(
-                  context,
-                ).textTheme.labelMedium?.copyWith(color: AppColors.navy),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 250,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: healthInsightsSeed.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 12),
-                  itemBuilder:
-                      (context, index) =>
-                          _InsightCard(
-                            insight: healthInsightsSeed[index],
-                            openLink: openLink,
-                          ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _SecondaryActionButton(
+                      icon: Icons.article_outlined,
+                      label: 'Articles',
+                      onTap: () => context.push('/articles'),
+                    ),
+                    const SizedBox(width: 12),
+                    _SecondaryActionButton(
+                      icon: Icons.history,
+                      label: 'History',
+                      onTap: () => context.push('/history'),
+                    ),
+                    const SizedBox(width: 12),
+                    _SecondaryActionButton(
+                      icon: Icons.local_hospital_outlined,
+                      label: 'Hospital',
+                      onTap: () => context.push('/hospitals'),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 20),
-              const ParityDisclaimerCard(
-                message:
-                    '⚠️ Not a medical diagnosis. Consult healthcare professionals.',
-              ),
-            ],
+                const SizedBox(height: 24),
+                Text(
+                  'Health Insights',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelMedium?.copyWith(color: AppColors.navy),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 250,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: healthInsightsSeed.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 12),
+                    itemBuilder:
+                        (context, index) => _InsightCard(
+                          insight: healthInsightsSeed[index],
+                          openLink: openLink,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const ParityDisclaimerCard(
+                  message:
+                      '⚠️ Not a medical diagnosis. Consult healthcare professionals.',
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 }
@@ -328,7 +326,6 @@ class _LatestAnalysisCard extends StatelessWidget {
         return '🫁';
     }
   }
-
 }
 
 class _SecondaryActionButton extends StatelessWidget {
@@ -347,9 +344,7 @@ class _SecondaryActionButton extends StatelessWidget {
     return Expanded(
       child: Material(
         color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),

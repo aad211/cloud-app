@@ -22,36 +22,59 @@ class ResultScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final latestRecord = ref.watch(latestAnalysisProvider);
     final historyAsync = ref.watch(analysisHistoryProvider);
+    final isHistorical = recordId != null;
     final selectedRecord = _resolveRecord(
       recordId,
       latestRecord,
       historyAsync.valueOrNull,
     );
+    void goToFallbackRoute() {
+      if (isHistorical) {
+        context.go('/history');
+      } else {
+        context.go('/home');
+      }
+    }
+
+    void handleBack() {
+      if (isHistorical && context.canPop()) {
+        context.pop();
+        return;
+      }
+      goToFallbackRoute();
+    }
 
     if (selectedRecord == null) {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        body: SafeArea(
-          child: Column(
-            children: [
-              ParityPageHeader(
-                title: 'Analysis Result',
-                subtitle: 'Based on your cough recording',
-                onBack: () => context.go('/home'),
-              ),
-              const Expanded(
-                child: Center(
-                  child: Text(
-                    'No analysis available yet.',
-                    style: TextStyle(
-                      color: AppColors.navy,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+      return PopScope(
+        canPop: isHistorical,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) return;
+          goToFallbackRoute();
+        },
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          body: SafeArea(
+            child: Column(
+              children: [
+                ParityPageHeader(
+                  title: 'Analysis Result',
+                  subtitle: 'Based on your cough recording',
+                  onBack: handleBack,
+                ),
+                const Expanded(
+                  child: Center(
+                    child: Text(
+                      'No analysis available yet.',
+                      style: TextStyle(
+                        color: AppColors.navy,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
@@ -60,177 +83,181 @@ class ResultScreen extends ConsumerWidget {
     final summary = buildResultSummary(selectedRecord);
     final record = summary.record;
     final items = summary.probabilities;
-    final isHistorical = recordId != null;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 24),
-          children: [
-            ParityPageHeader(
-              title: isHistorical ? 'Historical Record' : 'Analysis Result',
-              subtitle: isHistorical
-                  ? 'Recorded on ${_dateFmt.format(selectedRecord.date)}'
-                  : 'Based on your cough recording',
-              onBack: () {
-                if (recordId != null) {
-                  context.go('/history');
-                } else {
-                  context.go('/home');
-                }
-              },
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                children: [
-                  ParityGradientCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+    return PopScope(
+      canPop: isHistorical,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        goToFallbackRoute();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 24),
+            children: [
+              ParityPageHeader(
+                title: isHistorical ? 'Historical Record' : 'Analysis Result',
+                subtitle:
+                    isHistorical
+                        ? 'Recorded on ${_dateFmt.format(selectedRecord.date)}'
+                        : 'Based on your cough recording',
+                onBack: handleBack,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    ParityGradientCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          _RiskBadge(
+                            text: summary.riskLabel,
+                            color: summary.riskColor,
+                          ),
+                          const SizedBox(height: 20),
+                          const Text(
+                            'Most Likely',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            record.condition,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 14,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              children: [
+                                const Text(
+                                  'Confidence',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${record.percentage}%',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    _ProbabilityBreakdown(items: items),
+                    const SizedBox(height: 20),
+                    ParityInfoCard(
+                      leading: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: const BoxDecoration(
+                          color: AppColors.blue,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.info,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'What you should do',
+                            style: TextStyle(
+                              color: AppColors.navy,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          _BulletPoint('Rest and monitor your symptoms'),
+                          _BulletPoint('Consult a doctor if symptoms persist'),
+                          _BulletPoint(
+                            'Seek medical attention if condition worsens',
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Column(
                       children: [
-                        _RiskBadge(
-                          text: summary.riskLabel,
-                          color: summary.riskColor,
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          'Most Likely',
-                          style: TextStyle(color: Colors.white70, fontSize: 14),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          record.condition,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.w700,
+                        FilledButton(
+                          onPressed: () => context.go('/hospitals'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.navy,
+                            minimumSize: const Size.fromHeight(56),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 14,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text(
-                                'Confidence',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${record.percentage}%',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
+                              Icon(Icons.location_on_outlined, size: 18),
+                              SizedBox(width: 8),
+                              Text('Find Nearby Hospital'),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          onPressed: () => context.go('/home'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.gold,
+                            foregroundColor: AppColors.navy,
+                            minimumSize: const Size.fromHeight(56),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.home_outlined, size: 18),
+                              SizedBox(width: 8),
+                              Text('Back to Home'),
                             ],
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  _ProbabilityBreakdown(items: items),
-                  const SizedBox(height: 20),
-                  ParityInfoCard(
-                    leading: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: const BoxDecoration(
-                        color: AppColors.blue,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.info,
-                        color: Colors.white,
-                        size: 18,
-                      ),
+                    const SizedBox(height: 20),
+                    const ParityDisclaimerCard(
+                      message:
+                          '⚠️ This is not a medical diagnosis. Please consult a healthcare professional.',
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          'What you should do',
-                          style: TextStyle(
-                            color: AppColors.navy,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(height: 12),
-                        _BulletPoint('Rest and monitor your symptoms'),
-                        _BulletPoint('Consult a doctor if symptoms persist'),
-                        _BulletPoint(
-                          'Seek medical attention if condition worsens',
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Column(
-                    children: [
-                      FilledButton(
-                        onPressed: () => context.go('/hospitals'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.navy,
-                          minimumSize: const Size.fromHeight(56),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.location_on_outlined, size: 18),
-                            SizedBox(width: 8),
-                            Text('Find Nearby Hospital'),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      FilledButton(
-                        onPressed: () => context.go('/home'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.gold,
-                          foregroundColor: AppColors.navy,
-                          minimumSize: const Size.fromHeight(56),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.home_outlined, size: 18),
-                            SizedBox(width: 8),
-                            Text('Back to Home'),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const ParityDisclaimerCard(
-                    message:
-                        '⚠️ This is not a medical diagnosis. Please consult a healthcare professional.',
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

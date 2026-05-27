@@ -7,9 +7,11 @@ import 'package:cloud_app/core/utils/external_link_opener.dart';
 import 'package:cloud_app/core/widgets/parity_cards.dart';
 import 'package:cloud_app/core/widgets/parity_page_header.dart';
 import 'package:cloud_app/features/articles/data/articles_seed.dart';
+import 'package:cloud_app/features/articles/data/educational_articles_seed.dart';
 import 'package:cloud_app/features/articles/data/news_seed.dart';
 
-typedef OpenLinkHandler = Future<bool> Function(BuildContext context, String url);
+typedef OpenLinkHandler =
+    Future<bool> Function(BuildContext context, String url);
 
 class ArticlesScreen extends StatefulWidget {
   const ArticlesScreen({super.key, this.openLink = _defaultOpenLink});
@@ -34,56 +36,56 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
-        child: Column(
-          children: [
-            ParityPageHeader(
-              title: 'Articles and News',
-              subtitle: 'Learn about respiratory conditions and lung health',
-              onBack: () => context.go('/home'),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: AppColors.sand,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _SegmentButton(
-                        label: 'Articles',
-                        selected: tab == 0,
-                        onTap: () => setState(() => tab = 0),
+          child: Column(
+            children: [
+              ParityPageHeader(
+                title: 'Articles and News',
+                subtitle: 'Learn about respiratory conditions and lung health',
+                onBack: () => context.go('/home'),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppColors.sand,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _SegmentButton(
+                          label: 'Articles',
+                          selected: tab == 0,
+                          onTap: () => setState(() => tab = 0),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _SegmentButton(
-                        label: 'News',
-                        selected: tab == 1,
-                        onTap: () => setState(() => tab = 1),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _SegmentButton(
+                          label: 'News',
+                          selected: tab == 1,
+                          onTap: () => setState(() => tab = 1),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                child:
-                    tab == 0
-                        ? _ArticlesTab(openLink: widget.openLink)
-                        : _NewsTab(openLink: widget.openLink),
+              const SizedBox(height: 16),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  child:
+                      tab == 0
+                          ? _ArticlesTab(openLink: widget.openLink)
+                          : _NewsTab(openLink: widget.openLink),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
@@ -159,27 +161,11 @@ class _ArticlesTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        for (final card in const [
-          (
-            'Understanding Lung Health',
-            'Learn how to maintain healthy lungs and prevent respiratory diseases.',
-            'https://www.nhlbi.nih.gov/health/lungs',
-          ),
-          (
-            'Air Quality & Your Lungs',
-            'How pollution affects respiratory health and what you can do.',
-            'https://www.epa.gov/indoor-air-quality-iaq/inside-story-guide-indoor-air-quality',
-          ),
-          (
-            'Quitting Smoking Guide',
-            'Evidence-based strategies to quit smoking and improve lung function.',
-            'https://www.cdc.gov/tobacco/quit_smoking/index.htm',
-          ),
-        ]) ...[
+        for (final card in educationalArticlesSeed) ...[
           _EducationalArticleCard(
-            title: card.$1,
-            description: card.$2,
-            onReadMore: () => openLink(context, card.$3),
+            title: card.title,
+            description: card.description,
+            onReadMore: () => openLink(context, card.url),
           ),
           const SizedBox(height: 12),
         ],

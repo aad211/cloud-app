@@ -70,9 +70,34 @@ void main() {
     await tester.pump(); // allow async build() to complete
 
     expect(find.byType(CloudLogo), findsOneWidget);
-    
+
     final logo = tester.widget<CloudLogo>(find.byType(CloudLogo));
     expect(logo.size, CloudLogoSize.medium);
+  });
+
+  testWidgets('renders logo and subtitle in a single header row', (
+    tester,
+  ) async {
+    final storage = FakeLocalStorageService();
+
+    await tester.pumpWidget(_buildHome(storage: storage));
+    await tester.pump();
+
+    final headerRow = find.byWidgetPredicate((widget) {
+      if (widget is! Row) return false;
+      final hasLogo = widget.children.any((child) => child is CloudLogo);
+      final hasSubtitle = widget.children.any((child) {
+        final candidate = switch (child) {
+          Text text => text,
+          Expanded(child: final Text text) => text,
+          _ => null,
+        };
+        return candidate?.data == 'Cough Lung Observation & Diagnosis';
+      });
+      return hasLogo && hasSubtitle;
+    });
+
+    expect(headerRow, findsOneWidget);
   });
 
   group('HomeScreen – empty history', () {
@@ -89,8 +114,9 @@ void main() {
     testWidgets('shows an error state when history fails to load', (
       tester,
     ) async {
-      final storage = FakeLocalStorageService()
-        ..historyLoadException = Exception('load failed');
+      final storage =
+          FakeLocalStorageService()
+            ..historyLoadException = Exception('load failed');
 
       await tester.pumpWidget(_buildHome(storage: storage));
       await tester.pump();

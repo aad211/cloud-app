@@ -326,32 +326,36 @@ void main() {
 
   testWidgets(
     'shows success state as soon as analysis completes and waits 1 second before navigating to result',
-    (
-    tester,
-  ) async {
-    final storage = FakeLocalStorageService();
-    _setPhoneViewport(tester);
+    (tester) async {
+      final storage = FakeLocalStorageService();
+      _setPhoneViewport(tester);
 
-    await tester.pumpWidget(_buildCheckSymptomsHarness(storage));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(_buildCheckSymptomsHarness(storage));
+      await tester.pumpAndSettle();
 
-    await tester.tap(_recordButton());
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 11));
-    await tester.pumpAndSettle();
+      await tester.tap(_recordButton());
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 11));
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Analyze Now'));
-    await tester.pump();
-    await tester.pump();
+      await tester.tap(find.text('Analyze Now'));
+      await tester.pump();
+      await tester.pump();
 
-    expect(find.text('Analysis Complete ✓'), findsOneWidget);
-    expect(find.text('Analysis Result'), findsNothing);
+      expect(find.text('Analysis Complete ✓'), findsOneWidget);
+      expect(find.text('Analysis Result'), findsNothing);
 
-    await tester.pump(const Duration(seconds: 1));
-    await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Analysis Result'), findsOneWidget);
-  },
+      expect(find.text('Analysis Result'), findsOneWidget);
+
+      final router = GoRouter.of(tester.element(find.text('Analysis Result')));
+      expect(router.canPop(), isTrue);
+      router.pop();
+      await tester.pumpAndSettle();
+      expect(find.text('Check Symptoms'), findsOneWidget);
+    },
   );
 
   testWidgets('disables recording during success delay before navigation', (
@@ -494,20 +498,21 @@ void main() {
     },
   );
 
-  testWidgets('has PopScope with canPop: true for normal navigation',
-      (tester) async {
+  testWidgets('has PopScope with canPop: true for normal navigation', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           analysisInferenceBackendProvider.overrideWithValue(
             _FakeAnalysisInferenceBackend(
-              onInfer: ({
-                required input,
-                required height,
-                required width,
-                required channels,
-              }) async =>
-                  <double>[],
+              onInfer:
+                  ({
+                    required input,
+                    required height,
+                    required width,
+                    required channels,
+                  }) async => <double>[],
             ),
           ),
         ],
@@ -543,7 +548,8 @@ CoughAnalysisService _buildAnalysisService({
     required int height,
     required int width,
     required int channels,
-  })? onInfer,
+  })?
+  onInfer,
 }) {
   return CoughAnalysisService(
     backend: _FakeAnalysisInferenceBackend(
