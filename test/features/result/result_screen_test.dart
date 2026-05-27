@@ -194,6 +194,98 @@ void main() {
     expect(find.text('Bronchitis'), findsWidgets);
     expect(find.text('75%'), findsNWidgets(2));
   });
+
+  testWidgets('shows historical header when viewing historical record',
+      (tester) async {
+    final historyRecord = AnalysisRecord(
+      id: 'historical-123',
+      date: DateTime(2026, 5, 20, 10, 0),
+      condition: 'Healthy',
+      percentage: 85,
+      probabilities: const [
+        ConditionProbability(
+          name: 'Healthy',
+          percentage: 85,
+          hexColor: 0xFF22C55E,
+        ),
+        ConditionProbability(
+          name: 'Bronchitis',
+          percentage: 15,
+          hexColor: 0xFFFAB95B,
+        ),
+      ],
+    );
+
+    final storage =
+        FakeLocalStorageService()..history = [historyRecord.toJson()];
+
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, __) => ResultScreen(recordId: 'historical-123'),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(storage),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Historical Record'), findsOneWidget);
+    expect(find.text('Recorded on May 20, 2026'), findsOneWidget);
+  });
+
+  testWidgets('shows fresh analysis header when no recordId', (tester) async {
+    final freshRecord = AnalysisRecord(
+      id: 'fresh-123',
+      date: DateTime.now(),
+      condition: 'Healthy',
+      percentage: 90,
+      probabilities: const [
+        ConditionProbability(
+          name: 'Healthy',
+          percentage: 90,
+          hexColor: 0xFF22C55E,
+        ),
+        ConditionProbability(
+          name: 'Bronchitis',
+          percentage: 10,
+          hexColor: 0xFFFAB95B,
+        ),
+      ],
+    );
+
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, __) => const ResultScreen(),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          latestAnalysisProvider.overrideWith((ref) => freshRecord),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Analysis Result'), findsOneWidget);
+    expect(find.text('Based on your cough recording'), findsOneWidget);
+  });
 }
 
 AnalysisRecord _latestRecord() {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:cloud_app/app/theme/app_colors.dart';
 import 'package:cloud_app/core/models/analysis_record.dart';
 import 'package:cloud_app/core/models/condition_probability.dart';
@@ -14,6 +15,8 @@ class ResultScreen extends ConsumerWidget {
   const ResultScreen({super.key, this.recordId});
 
   final String? recordId;
+
+  static final _dateFmt = DateFormat('MMMM d, y', 'en_US');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -57,6 +60,7 @@ class ResultScreen extends ConsumerWidget {
     final summary = buildResultSummary(selectedRecord);
     final record = summary.record;
     final items = summary.probabilities;
+    final isHistorical = recordId != null && selectedRecord != null;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -65,8 +69,10 @@ class ResultScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(bottom: 24),
           children: [
             ParityPageHeader(
-              title: 'Analysis Result',
-              subtitle: 'Based on your cough recording',
+              title: isHistorical ? 'Historical Record' : 'Analysis Result',
+              subtitle: isHistorical
+                  ? 'Recorded on ${_dateFmt.format(selectedRecord.date)}'
+                  : 'Based on your cough recording',
               onBack: () => context.go('/home'),
             ),
             Padding(
