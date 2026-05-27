@@ -11,10 +11,15 @@ import 'package:cloud_app/core/widgets/cloud_logo.dart';
 
 import '../../test_helpers/fake_local_storage_service.dart';
 
-Widget _buildHome({required FakeLocalStorageService storage}) {
+Future<bool> _noopOpenLink(BuildContext _, String __) async => true;
+
+Widget _buildHome({
+  required FakeLocalStorageService storage,
+  Future<bool> Function(BuildContext context, String url)? openLink,
+}) {
   return ProviderScope(
     overrides: [localStorageServiceProvider.overrideWithValue(storage)],
-    child: const MaterialApp(home: HomeScreen()),
+    child: MaterialApp(home: HomeScreen(openLink: openLink ?? _noopOpenLink)),
   );
 }
 
@@ -137,6 +142,35 @@ void main() {
         ),
         findsOneWidget,
       );
+    });
+
+    testWidgets('health insight Read more opens URL from shared seed', (
+      tester,
+    ) async {
+      final storage = FakeLocalStorageService();
+      String? openedUrl;
+
+      await tester.pumpWidget(
+        _buildHome(
+          storage: storage,
+          openLink: (context, url) async {
+            openedUrl = url;
+            return true;
+          },
+        ),
+      );
+      await tester.pump();
+
+      await tester.scrollUntilVisible(
+        find.text('Read more').first,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Read more').first);
+      await tester.pumpAndSettle();
+
+      expect(openedUrl, isNotNull);
+      expect(openedUrl, startsWith('https://'));
     });
   });
 

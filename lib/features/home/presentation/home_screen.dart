@@ -4,33 +4,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_app/app/theme/app_colors.dart';
+import 'package:cloud_app/core/data/health_insights_seed.dart';
 import 'package:cloud_app/core/models/analysis_record.dart';
+import 'package:cloud_app/core/models/health_insight_record.dart';
+import 'package:cloud_app/core/utils/external_link_opener.dart';
 import 'package:cloud_app/core/widgets/parity_cards.dart';
 import 'package:cloud_app/features/analysis/presentation/analysis_history_controller.dart';
 import 'package:cloud_app/core/widgets/cloud_logo.dart';
 import 'package:cloud_app/core/widgets/exit_confirmation_dialog.dart';
 
+typedef OpenLinkHandler = Future<bool> Function(BuildContext context, String url);
+
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.openLink = _defaultOpenLink});
+
+  final OpenLinkHandler openLink;
+
+  static Future<bool> _defaultOpenLink(BuildContext context, String url) {
+    return openExternalLink(context: context, url: url);
+  }
 
   static final _dateFmt = DateFormat('MMMM d, y • hh:mm a', 'en_US');
-  static const _healthInsights = [
-    _InsightCardData(
-      emoji: '🫁',
-      title: 'Understanding COPD',
-      description: 'Learn about chronic obstructive pulmonary disease',
-    ),
-    _InsightCardData(
-      emoji: '🌿',
-      title: 'Air Quality Tips',
-      description: 'How to protect your lungs from pollution',
-    ),
-    _InsightCardData(
-      emoji: '🚭',
-      title: 'Quit Smoking Guide',
-      description: 'Steps to improve your respiratory health',
-    ),
-  ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -138,11 +132,14 @@ class HomeScreen extends ConsumerWidget {
                 height: 250,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  itemCount: _healthInsights.length,
+                  itemCount: healthInsightsSeed.length,
                   separatorBuilder: (_, __) => const SizedBox(width: 12),
                   itemBuilder:
                       (context, index) =>
-                          _InsightCard(article: _healthInsights[index]),
+                          _InsightCard(
+                            insight: healthInsightsSeed[index],
+                            openLink: openLink,
+                          ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -381,9 +378,10 @@ class _SecondaryActionButton extends StatelessWidget {
 }
 
 class _InsightCard extends StatelessWidget {
-  const _InsightCard({required this.article});
+  const _InsightCard({required this.insight, required this.openLink});
 
-  final _InsightCardData article;
+  final HealthInsightRecord insight;
+  final OpenLinkHandler openLink;
 
   @override
   Widget build(BuildContext context) {
@@ -398,10 +396,10 @@ class _InsightCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(article.emoji, style: const TextStyle(fontSize: 34)),
+          Text(insight.emoji, style: const TextStyle(fontSize: 34)),
           const SizedBox(height: 10),
           Text(
-            article.title,
+            insight.title,
             style: const TextStyle(
               color: AppColors.navy,
               fontSize: 13,
@@ -410,14 +408,14 @@ class _InsightCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            article.description,
+            insight.description,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(color: AppColors.blue, fontSize: 11),
           ),
           const SizedBox(height: 10),
           TextButton(
-            onPressed: () {},
+            onPressed: () => openLink(context, insight.url),
             style: TextButton.styleFrom(
               backgroundColor: AppColors.infoBackground,
               foregroundColor: AppColors.navy,
@@ -434,16 +432,4 @@ class _InsightCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _InsightCardData {
-  const _InsightCardData({
-    required this.emoji,
-    required this.title,
-    required this.description,
-  });
-
-  final String emoji;
-  final String title;
-  final String description;
 }
