@@ -66,5 +66,66 @@ void main() {
       expect(text.style?.fontSize, 56.0);
       expect(text.style?.letterSpacing, 2.0);
     });
+
+    testWidgets('uses default navy colors', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: CloudLogo(),
+          ),
+        ),
+      );
+
+      final icon = tester.widget<Icon>(find.byType(Icon));
+      expect(icon.color, AppColors.navy);
+
+      final text = tester.widget<Text>(find.text('CLOUD'));
+      expect(text.style?.color, AppColors.navy);
+    });
+
+    testWidgets('applies custom iconColor', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: CloudLogo(iconColor: Colors.white),
+          ),
+        ),
+      );
+
+      final icon = tester.widget<Icon>(find.byType(Icon));
+      expect(icon.color, Colors.white);
+    });
+
+    testWidgets('applies custom textColor', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: CloudLogo(textColor: Colors.red),
+          ),
+        ),
+      );
+
+      final text = tester.widget<Text>(find.text('CLOUD'));
+      expect(text.style?.color, Colors.red);
+    });
+
+    testWidgets('applies both custom colors', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: CloudLogo(
+              iconColor: Colors.blue,
+              textColor: Colors.green,
+            ),
+          ),
+        ),
+      );
+
+      final icon = tester.widget<Icon>(find.byType(Icon));
+      expect(icon.color, Colors.blue);
+
+      final text = tester.widget<Text>(find.text('CLOUD'));
+      expect(text.style?.color, Colors.green);
+    });
   });
 }
