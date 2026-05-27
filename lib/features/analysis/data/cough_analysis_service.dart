@@ -67,19 +67,26 @@ class CoughAnalysisService {
         'Recorded cough audio did not contain valid 16-bit PCM WAV samples.',
       );
     }
+    
+    // Get the model's expected input shape dynamically
+    final expectedShape = await _backend.getExpectedInputShape();
+    final modelHeight = expectedShape[0];
+    final modelWidth = expectedShape[1];
+    final modelChannels = expectedShape[2];
+    
     final melSpectrogram = (_computeMelSpectrogram ??
         _defaultComputeMelSpectrogram)(wavSamples);
     final preparedInput = _prepareInput(
       melSpectrogram,
-      height: inputHeight,
-      width: inputWidth,
-      channels: inputChannels,
+      height: modelHeight,
+      width: modelWidth,
+      channels: modelChannels,
     );
     final scores = await _backend.infer(
       input: preparedInput,
-      height: inputHeight,
-      width: inputWidth,
-      channels: inputChannels,
+      height: modelHeight,
+      width: modelWidth,
+      channels: modelChannels,
     );
 
     if (labels.isEmpty) {

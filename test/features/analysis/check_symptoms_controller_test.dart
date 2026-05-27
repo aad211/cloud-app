@@ -312,6 +312,9 @@ class _FakeAnalysisInferenceBackend implements AnalysisInferenceBackend {
   onInfer;
 
   @override
+  Future<List<int>> getExpectedInputShape() async => const [128, 128, 1];
+
+  @override
   Future<List<double>> infer({
     required Float32List input,
     required int height,

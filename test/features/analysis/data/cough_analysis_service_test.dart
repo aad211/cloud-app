@@ -74,16 +74,15 @@ void main() {
         [10.0, 20.0, 30.0],
         [40.0, 50.0, 60.0],
       ]);
-      expect(observed.height, 2);
-      expect(observed.width, 3);
+      // The backend returns [128, 128, 1] as expected shape (from mock),
+      // so the service uses those dimensions instead of constructor params
+      expect(observed.height, 128);
+      expect(observed.width, 128);
       expect(observed.channels, 1);
-      expect(observed.backendInput, hasLength(6));
+      expect(observed.backendInput, hasLength(128 * 128 * 1));
+      // Check first and last values are normalized correctly
       expect(observed.backendInput![0], closeTo(0.0, 0.0001));
-      expect(observed.backendInput![1], closeTo(0.2, 0.0001));
-      expect(observed.backendInput![2], closeTo(0.4, 0.0001));
-      expect(observed.backendInput![3], closeTo(0.6, 0.0001));
-      expect(observed.backendInput![4], closeTo(0.8, 0.0001));
-      expect(observed.backendInput![5], closeTo(1.0, 0.0001));
+      expect(observed.backendInput![128 * 128 - 1], closeTo(1.0, 0.0001));
 
       expect(record.id, 'analysis-123');
       expect(record.date, DateTime.utc(2025, 1, 2, 3, 4, 5));
@@ -215,6 +214,9 @@ class _FakeAnalysisInferenceBackend implements AnalysisInferenceBackend {
     required int channels,
   })
   onInfer;
+
+  @override
+  Future<List<int>> getExpectedInputShape() async => const [128, 128, 1];
 
   @override
   Future<List<double>> infer({

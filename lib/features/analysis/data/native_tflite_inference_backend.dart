@@ -15,6 +15,22 @@ class NativeTfliteInferenceBackend implements AnalysisInferenceBackend {
   Future<Interpreter>? _interpreterFuture;
 
   @override
+  Future<List<int>> getExpectedInputShape() async {
+    final interpreter = await _ensureInterpreter();
+    final inputTensor = interpreter.getInputTensor(0);
+    final shape = inputTensor.shape;
+    
+    if (shape.length != 4) {
+      throw StateError(
+        'Unsupported model input shape: $shape. Expected 4D tensor [batch, height, width, channels].',
+      );
+    }
+    
+    // Return [height, width, channels]
+    return [shape[1], shape[2], shape[3]];
+  }
+
+  @override
   Future<List<double>> infer({
     required Float32List input,
     required int height,
