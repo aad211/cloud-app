@@ -118,7 +118,7 @@ void main() {
         isA<StateError>().having(
           (error) => error.message,
           'message',
-          'No analysis labels were loaded from assets/models/labels.txt.',
+          'No analysis labels were loaded from assets/labels.txt.',
         ),
       ),
     );

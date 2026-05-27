@@ -42,7 +42,7 @@ class CoughAnalysisService {
        _generateId = generateId,
        _now = now;
 
-  static const labelsAssetPath = 'assets/models/labels.txt';
+  static const labelsAssetPath = 'assets/labels.txt';
 
   final AnalysisInferenceBackend _backend;
   final Future<List<String>> Function()? _loadLabels;
