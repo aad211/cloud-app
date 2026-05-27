@@ -14,6 +14,8 @@ const List<ArticleRecord> articleSeed = [
       'Coughing attacks',
     ],
     color: Color(0xFF547792),
+    url:
+        'https://www.mayoclinic.org/diseases-conditions/asthma/symptoms-causes/syc-20369653',
   ),
   ArticleRecord(
     name: 'Bronchitis',
@@ -27,6 +29,8 @@ const List<ArticleRecord> articleSeed = [
       'Chest discomfort',
     ],
     color: Color(0xFFFAB95B),
+    url:
+        'https://www.mayoclinic.org/diseases-conditions/bronchitis/symptoms-causes/syc-20355566',
   ),
   ArticleRecord(
     name: 'Pneumonia',
@@ -35,6 +39,7 @@ const List<ArticleRecord> articleSeed = [
         'An infection that inflames air sacs in one or both lungs, which may fill with fluid.',
     symptoms: ['Fever', 'Chills', 'Cough with phlegm', 'Difficulty breathing'],
     color: Color(0xFFEF4444),
+    url: 'https://www.cdc.gov/pneumonia/index.html',
   ),
   ArticleRecord(
     name: 'COVID-19',
@@ -48,6 +53,7 @@ const List<ArticleRecord> articleSeed = [
       'Shortness of breath',
     ],
     color: Color(0xFFEF4444),
+    url: 'https://www.cdc.gov/covid/index.html',
   ),
   ArticleRecord(
     name: 'Lung Cancer',
@@ -61,6 +67,7 @@ const List<ArticleRecord> articleSeed = [
       'Weight loss',
     ],
     color: Color(0xFF991B1B),
+    url: 'https://www.cancer.gov/types/lung',
   ),
   ArticleRecord(
     name: 'Healthy',
@@ -73,5 +80,6 @@ const List<ArticleRecord> articleSeed = [
       'Active lifestyle',
     ],
     color: Color(0xFF22C55E),
+    url: 'https://www.nhlbi.nih.gov/health/lungs',
   ),
 ];

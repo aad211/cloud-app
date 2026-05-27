@@ -7,6 +7,7 @@ class ArticleRecord {
     required this.description,
     required this.symptoms,
     required this.color,
+    required this.url,
   });
 
   final String name;
@@ -14,4 +15,5 @@ class ArticleRecord {
   final String description;
   final List<String> symptoms;
   final Color color;
+  final String url;
 }

@@ -5,6 +5,7 @@ class NewsRecord {
     required this.description,
     required this.category,
     required this.image,
+    required this.url,
   });
 
   final String title;
@@ -12,4 +13,5 @@ class NewsRecord {
   final String description;
   final String category;
   final String image;
+  final String url;
 }
