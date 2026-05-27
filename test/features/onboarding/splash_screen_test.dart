@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cloud_app/app/theme/app_colors.dart';
 import 'package:cloud_app/features/onboarding/presentation/splash_screen.dart';
+import 'package:cloud_app/core/widgets/cloud_logo.dart';
 
 import '../../test_helpers/fake_local_storage_service.dart';
 import 'package:cloud_app/core/storage/local_storage_service.dart';
@@ -54,5 +55,17 @@ void main() {
       }),
       findsNothing,
     );
+  });
+
+  testWidgets('displays CloudLogo with large size and white colors',
+      (tester) async {
+    await tester.pumpWidget(_buildSplash());
+
+    expect(find.byType(CloudLogo), findsOneWidget);
+    
+    final logo = tester.widget<CloudLogo>(find.byType(CloudLogo));
+    expect(logo.size, CloudLogoSize.large);
+    expect(logo.iconColor, Colors.white);
+    expect(logo.textColor, Colors.white);
   });
 }

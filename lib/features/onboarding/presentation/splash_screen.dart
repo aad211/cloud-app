@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_app/app/theme/app_colors.dart';
 import 'package:cloud_app/core/storage/local_storage_service.dart';
+import 'package:cloud_app/core/widgets/cloud_logo.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -65,33 +66,30 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           opacity: _opacityAnimation,
           child: ScaleTransition(
             scale: _scaleAnimation,
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 32, vertical: 36),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.cloud, size: 120, color: Colors.white),
-                  SizedBox(height: 24),
-                  Text(
-                    'CLOUD',
-                    style: TextStyle(
-                      fontSize: 56,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 2,
-                      color: Colors.white,
+            child: Material(
+              type: MaterialType.transparency,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 36),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CloudLogo(
+                      size: CloudLogoSize.large,
+                      iconColor: Colors.white,
+                      textColor: Colors.white,
                     ),
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'Cough Lung Observation\n& Diagnosis',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18,
-                      height: 1.5,
-                      color: Color(0xFFF4F8FB),
+                    SizedBox(height: 12),
+                    Text(
+                      'Cough Lung Observation\n& Diagnosis',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        height: 1.5,
+                        color: Color(0xFFF4F8FB),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
