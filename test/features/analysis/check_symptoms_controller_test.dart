@@ -5,8 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cloud_app/core/storage/local_storage_service.dart';
 import 'package:cloud_app/features/analysis/data/analysis_inference_backend.dart';
 import 'package:cloud_app/features/analysis/data/audio_capture_service.dart';
+import 'package:cloud_app/features/analysis/data/audio_playback_service.dart';
 import 'package:cloud_app/features/analysis/data/cough_analysis_service.dart';
 import 'package:cloud_app/features/analysis/data/spectrogram_export_service.dart';
+import 'package:cloud_app/features/analysis/domain/recorded_cough.dart';
 import 'package:cloud_app/features/analysis/presentation/check_symptoms_controller.dart';
 import 'package:cloud_app/features/analysis/presentation/latest_analysis_provider.dart';
 
@@ -21,6 +23,9 @@ void main() {
         ),
         audioCaptureServiceProvider.overrideWithValue(
           _buildAudioCaptureService(),
+        ),
+        audioPlaybackServiceProvider.overrideWithValue(
+          _FakeAudioPlaybackService(),
         ),
         coughAnalysisServiceProvider.overrideWithValue(_buildAnalysisService()),
       ],
@@ -55,6 +60,9 @@ void main() {
           ),
           audioCaptureServiceProvider.overrideWithValue(
             _buildAudioCaptureService(hasPermission: false),
+          ),
+          audioPlaybackServiceProvider.overrideWithValue(
+            _FakeAudioPlaybackService(),
           ),
           coughAnalysisServiceProvider.overrideWithValue(
             _buildAnalysisService(),
@@ -101,6 +109,9 @@ void main() {
               },
             ),
           ),
+          audioPlaybackServiceProvider.overrideWithValue(
+            _FakeAudioPlaybackService(),
+          ),
           coughAnalysisServiceProvider.overrideWithValue(
             _buildAnalysisService(
               labels: const ['Bronchitis', 'Healthy'],
@@ -146,6 +157,9 @@ void main() {
           localStorageServiceProvider.overrideWithValue(storage),
           audioCaptureServiceProvider.overrideWithValue(
             _buildAudioCaptureService(),
+          ),
+          audioPlaybackServiceProvider.overrideWithValue(
+            _FakeAudioPlaybackService(),
           ),
           coughAnalysisServiceProvider.overrideWithValue(
             CoughAnalysisService(
@@ -204,7 +218,12 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         localStorageServiceProvider.overrideWithValue(storage),
-        audioCaptureServiceProvider.overrideWithValue(_buildAudioCaptureService()),
+        audioCaptureServiceProvider.overrideWithValue(
+          _buildAudioCaptureService(),
+        ),
+        audioPlaybackServiceProvider.overrideWithValue(
+          _FakeAudioPlaybackService(),
+        ),
         coughAnalysisServiceProvider.overrideWithValue(
           CoughAnalysisService(
             backend: _FakeAnalysisInferenceBackend(
@@ -250,6 +269,98 @@ void main() {
     );
     expect(storage.history, isEmpty);
   });
+
+  test('runDebugInference stores diagnostics and logs', () async {
+    final container = ProviderContainer(
+      overrides: [
+        localStorageServiceProvider.overrideWithValue(
+          FakeLocalStorageService(),
+        ),
+        audioCaptureServiceProvider.overrideWithValue(
+          _buildAudioCaptureService(),
+        ),
+        audioPlaybackServiceProvider.overrideWithValue(
+          _FakeAudioPlaybackService(),
+        ),
+        coughAnalysisServiceProvider.overrideWithValue(_buildAnalysisService()),
+      ],
+    );
+    addTearDown(container.dispose);
+    final subscription = container.listen(
+      checkSymptomsControllerProvider,
+      (_, __) {},
+    );
+    addTearDown(subscription.close);
+    final notifier = container.read(checkSymptomsControllerProvider.notifier);
+
+    await notifier.toggleRecording();
+    await notifier.toggleRecording();
+    await notifier.runDebugInference();
+
+    expect(notifier.state.debugStatus, DebugInferenceStatus.success);
+    expect(notifier.state.debugResult, isNotNull);
+    expect(notifier.state.debugLogs, isNotEmpty);
+  });
+
+  test('toggleDebugPlayback switches between play and pause states', () async {
+    final playback = _FakeAudioPlaybackService();
+    final container = ProviderContainer(
+      overrides: [
+        localStorageServiceProvider.overrideWithValue(
+          FakeLocalStorageService(),
+        ),
+        audioCaptureServiceProvider.overrideWithValue(
+          _buildAudioCaptureService(),
+        ),
+        audioPlaybackServiceProvider.overrideWithValue(playback),
+        coughAnalysisServiceProvider.overrideWithValue(_buildAnalysisService()),
+      ],
+    );
+    addTearDown(container.dispose);
+    final notifier = container.read(checkSymptomsControllerProvider.notifier);
+
+    await notifier.toggleRecording();
+    await notifier.toggleRecording();
+
+    await notifier.toggleDebugPlayback();
+    expect(notifier.state.isDebugPlaybackActive, isTrue);
+    expect(playback.playCalls, 1);
+    expect(playback.pauseCalls, 0);
+
+    await notifier.toggleDebugPlayback();
+    expect(notifier.state.isDebugPlaybackActive, isFalse);
+    expect(playback.playCalls, 1);
+    expect(playback.pauseCalls, 1);
+  });
+
+  test(
+    'playLatestRecording reports debug error when no recording exists',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(
+            FakeLocalStorageService(),
+          ),
+          audioCaptureServiceProvider.overrideWithValue(
+            _buildAudioCaptureService(),
+          ),
+          audioPlaybackServiceProvider.overrideWithValue(
+            _FakeAudioPlaybackService(),
+          ),
+          coughAnalysisServiceProvider.overrideWithValue(
+            _buildAnalysisService(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(checkSymptomsControllerProvider.notifier);
+
+      await notifier.playLatestRecording();
+
+      expect(notifier.state.debugStatus, DebugInferenceStatus.error);
+      expect(notifier.state.debugErrorMessage, isNotEmpty);
+    },
+  );
 }
 
 AudioCaptureService _buildAudioCaptureService({
@@ -264,6 +375,24 @@ AudioCaptureService _buildAudioCaptureService({
     stopCallback: onStop ?? () async => '/records/cough.wav',
     readBlobBytes: (_) async => Uint8List.fromList(const [1, 2, 3]),
   );
+}
+
+class _FakeAudioPlaybackService implements AudioPlaybackService {
+  int playCalls = 0;
+  int pauseCalls = 0;
+
+  @override
+  Future<void> play(RecordedCough cough) async {
+    playCalls += 1;
+  }
+
+  @override
+  Future<void> pause() async {
+    pauseCalls += 1;
+  }
+
+  @override
+  Future<void> stop() async {}
 }
 
 CoughAnalysisService _buildAnalysisService({

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -207,6 +208,32 @@ class CheckSymptomsScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
+                      if (kDebugMode) ...[
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: OutlinedButton.icon(
+                            onPressed: controller.toggleDebugPanel,
+                            icon: const Icon(
+                              Icons.bug_report_outlined,
+                              size: 16,
+                            ),
+                            label: Text(
+                              state.isDebugPanelOpen
+                                  ? 'Hide Debug'
+                                  : 'Show Debug',
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.navy,
+                              side: const BorderSide(color: AppColors.sand),
+                            ),
+                          ),
+                        ),
+                        if (state.isDebugPanelOpen) ...[
+                          const SizedBox(height: 12),
+                          _DebugPanel(state: state, controller: controller),
+                        ],
+                      ],
                       if (state.errorMessage.isNotEmpty) ...[
                         const SizedBox(height: 16),
                         Container(
@@ -291,6 +318,189 @@ class CheckSymptomsScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DebugPanel extends StatelessWidget {
+  const _DebugPanel({required this.state, required this.controller});
+
+  final CheckSymptomsState state;
+  final CheckSymptomsController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final result = state.debugResult;
+    final canRun = state.hasRecording && !state.isRecording;
+    final isBusy = state.debugStatus == DebugInferenceStatus.loading;
+    final isPlaybackActive = state.isDebugPlaybackActive;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.sand, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Debug Inference',
+            style: TextStyle(
+              color: AppColors.navy,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: canRun ? controller.toggleDebugPlayback : null,
+                  icon: Icon(
+                    isPlaybackActive
+                        ? Icons.pause_circle_outline_rounded
+                        : Icons.play_arrow_rounded,
+                  ),
+                  label: Text(
+                    isPlaybackActive ? 'Pause Playback' : 'Play Recording',
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed:
+                      canRun && !isBusy ? controller.runDebugInference : null,
+                  icon:
+                      isBusy
+                          ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                          : const Icon(Icons.science_outlined),
+                  label: const Text('Run Debug Inference'),
+                ),
+              ),
+            ],
+          ),
+          if (!canRun) ...[
+            const SizedBox(height: 8),
+            const Text(
+              'Record cough first to enable debugging actions.',
+              style: TextStyle(color: AppColors.blue, fontSize: 12),
+            ),
+          ],
+          if (result != null) ...[
+            const SizedBox(height: 12),
+            const Text(
+              'Mel Spectrogram',
+              style: TextStyle(
+                color: AppColors.navy,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 6),
+            _PreviewImage(bytes: result.melPreviewPngBytes),
+            const SizedBox(height: 10),
+            Text(
+              'Model Input (${result.modelHeight} x ${result.modelWidth} x ${result.modelChannels})',
+              style: const TextStyle(
+                color: AppColors.navy,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 6),
+            _PreviewImage(bytes: result.preparedInputPreviewPngBytes),
+          ],
+          const SizedBox(height: 12),
+          Text(
+            'Status: ${switch (state.debugStatus) {
+              DebugInferenceStatus.idle => 'Idle',
+              DebugInferenceStatus.loading => 'Running',
+              DebugInferenceStatus.success => 'Success',
+              DebugInferenceStatus.error => 'Error',
+            }}',
+            style: const TextStyle(
+              color: AppColors.navy,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (state.debugErrorMessage.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              state.debugErrorMessage,
+              style: const TextStyle(
+                color: AppColors.critical,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+          if (state.debugLogs.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.sand),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final line in state.debugLogs)
+                    Text(
+                      '- $line',
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 11,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PreviewImage extends StatelessWidget {
+  const _PreviewImage({required this.bytes});
+
+  final Uint8List bytes;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        color: Colors.black,
+        width: double.infinity,
+        height: 120,
+        child:
+            bytes.isEmpty
+                ? const Center(
+                  child: Text(
+                    'No preview',
+                    style: TextStyle(color: Colors.white70, fontSize: 11),
+                  ),
+                )
+                : Image.memory(bytes, fit: BoxFit.cover, gaplessPlayback: true),
       ),
     );
   }

@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:ui' as ui;
 import 'package:cloud_app/core/models/analysis_record.dart';
 import 'package:cloud_app/core/models/condition_probability.dart';
 import 'package:cloud_app/features/analysis/data/analysis_inference_backend.dart';
@@ -21,6 +23,34 @@ typedef SpectrogramExporter =
       required String analysisId,
       required List<List<double>> melSpectrogram,
     });
+
+class DebugAnalysisResult {
+  const DebugAnalysisResult({
+    required this.modelHeight,
+    required this.modelWidth,
+    required this.modelChannels,
+    required this.wavSampleCount,
+    required this.melSpectrogram,
+    required this.preparedInput,
+    required this.labels,
+    required this.rawScores,
+    required this.stageDurationsMs,
+    required this.melPreviewPngBytes,
+    required this.preparedInputPreviewPngBytes,
+  });
+
+  final int modelHeight;
+  final int modelWidth;
+  final int modelChannels;
+  final int wavSampleCount;
+  final List<List<double>> melSpectrogram;
+  final Float32List preparedInput;
+  final List<String> labels;
+  final List<double> rawScores;
+  final Map<String, int> stageDurationsMs;
+  final Uint8List melPreviewPngBytes;
+  final Uint8List preparedInputPreviewPngBytes;
+}
 
 class CoughAnalysisService {
   CoughAnalysisService({
@@ -67,13 +97,13 @@ class CoughAnalysisService {
         'Recorded cough audio did not contain valid 16-bit PCM WAV samples.',
       );
     }
-    
+
     // Get the model's expected input shape dynamically
     final expectedShape = await _backend.getExpectedInputShape();
     final modelHeight = expectedShape[0];
     final modelWidth = expectedShape[1];
     final modelChannels = expectedShape[2];
-    
+
     final melSpectrogram = (_computeMelSpectrogram ??
         _defaultComputeMelSpectrogram)(wavSamples);
     final preparedInput = _prepareInput(
@@ -133,6 +163,225 @@ class CoughAnalysisService {
       storageBackend: exportResult.storageBackend,
     );
   }
+
+  Future<DebugAnalysisResult> buildDebugAnalysis(
+    RecordedCough recordedCough,
+  ) async {
+    final stageDurations = <String, int>{};
+
+    final labelsTimer = Stopwatch()..start();
+    final labels = await (_loadLabels ?? _defaultLoadLabels)();
+    labelsTimer.stop();
+    stageDurations['Load labels'] = labelsTimer.elapsedMilliseconds;
+
+    final wavTimer = Stopwatch()..start();
+    final wavSamples = (_readWavSamples ?? WavReader.readMono16BitPcmBytes)(
+      recordedCough.wavBytes,
+    );
+    wavTimer.stop();
+    stageDurations['Decode WAV'] = wavTimer.elapsedMilliseconds;
+    if (wavSamples.isEmpty) {
+      throw StateError(
+        'Recorded cough audio did not contain valid 16-bit PCM WAV samples.',
+      );
+    }
+
+    final shapeTimer = Stopwatch()..start();
+    final expectedShape = await _backend.getExpectedInputShape();
+    shapeTimer.stop();
+    stageDurations['Read model shape'] = shapeTimer.elapsedMilliseconds;
+    final modelHeight = expectedShape[0];
+    final modelWidth = expectedShape[1];
+    final modelChannels = expectedShape[2];
+
+    final melTimer = Stopwatch()..start();
+    final melSpectrogram = (_computeMelSpectrogram ??
+        _defaultComputeMelSpectrogram)(wavSamples);
+    melTimer.stop();
+    stageDurations['Compute mel spectrogram'] = melTimer.elapsedMilliseconds;
+
+    final preprocessTimer = Stopwatch()..start();
+    final preparedInput = _prepareInput(
+      melSpectrogram,
+      height: modelHeight,
+      width: modelWidth,
+      channels: modelChannels,
+    );
+    preprocessTimer.stop();
+    stageDurations['Prepare model input'] = preprocessTimer.elapsedMilliseconds;
+
+    final inferTimer = Stopwatch()..start();
+    final scores = await _backend.infer(
+      input: preparedInput,
+      height: modelHeight,
+      width: modelWidth,
+      channels: modelChannels,
+    );
+    inferTimer.stop();
+    stageDurations['Run inference'] = inferTimer.elapsedMilliseconds;
+
+    if (labels.isEmpty) {
+      throw StateError('No analysis labels were loaded from $labelsAssetPath.');
+    }
+    if (scores.isEmpty) {
+      throw StateError('Inference backend returned no scores.');
+    }
+    if (labels.length != scores.length) {
+      throw StateError(
+        'Expected ${labels.length} scores for the loaded labels, but received '
+        '${scores.length}.',
+      );
+    }
+
+    final renderTimer = Stopwatch()..start();
+    final melPreviewPngBytes = await _renderDebugPngBytes(melSpectrogram);
+    final preparedPreviewMatrix = _buildPreparedInputPreviewMatrix(
+      preparedInput: preparedInput,
+      height: modelHeight,
+      width: modelWidth,
+      channels: modelChannels,
+    );
+    final preparedInputPreviewPngBytes = await _renderDebugPngBytes(
+      preparedPreviewMatrix,
+    );
+    renderTimer.stop();
+    stageDurations['Render previews'] = renderTimer.elapsedMilliseconds;
+
+    return DebugAnalysisResult(
+      modelHeight: modelHeight,
+      modelWidth: modelWidth,
+      modelChannels: modelChannels,
+      wavSampleCount: wavSamples.length,
+      melSpectrogram: melSpectrogram,
+      preparedInput: preparedInput,
+      labels: labels,
+      rawScores: scores,
+      stageDurationsMs: stageDurations,
+      melPreviewPngBytes: melPreviewPngBytes,
+      preparedInputPreviewPngBytes: preparedInputPreviewPngBytes,
+    );
+  }
+
+  List<List<double>> _buildPreparedInputPreviewMatrix({
+    required Float32List preparedInput,
+    required int height,
+    required int width,
+    required int channels,
+  }) {
+    final preview = List.generate(
+      height,
+      (_) => List<double>.filled(width, 0),
+      growable: false,
+    );
+    var offset = 0;
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        preview[y][x] = preparedInput[offset];
+        offset += channels;
+      }
+    }
+    return preview;
+  }
+
+  Future<Uint8List> _renderDebugPngBytes(List<List<double>> matrix) async {
+    final height = matrix.isEmpty ? 1 : matrix.length;
+    final width = matrix.fold<int>(
+      1,
+      (maxWidth, row) => row.length > maxWidth ? row.length : maxWidth,
+    );
+    final values = <double>[];
+    for (final row in matrix) {
+      for (final value in row) {
+        if (value.isFinite) {
+          values.add(value);
+        }
+      }
+    }
+    final minValue = values.isEmpty ? 0.0 : values.reduce(_minDouble);
+    final maxValue = values.isEmpty ? 0.0 : values.reduce(_maxDouble);
+    final range = maxValue - minValue;
+    final pixels = Uint8List(width * height * 4);
+
+    for (var y = 0; y < height; y += 1) {
+      final sourceY = height - 1 - y;
+      final row = sourceY < matrix.length ? matrix[sourceY] : const <double>[];
+      for (var x = 0; x < width; x += 1) {
+        final rawValue = x < row.length && row[x].isFinite ? row[x] : minValue;
+        final normalized =
+            range <= 0 ? 0.0 : ((rawValue - minValue) / range).clamp(0.0, 1.0);
+        final color = _infernoColor(normalized);
+        final pixelOffset = (y * width + x) * 4;
+        pixels[pixelOffset] = color.$1;
+        pixels[pixelOffset + 1] = color.$2;
+        pixels[pixelOffset + 2] = color.$3;
+        pixels[pixelOffset + 3] = 255;
+      }
+    }
+
+    final image = await _decodeImageFromPixels(
+      pixels,
+      width: width,
+      height: height,
+    );
+    try {
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        throw StateError('Failed to encode debug preview PNG bytes.');
+      }
+      return byteData.buffer.asUint8List();
+    } finally {
+      image.dispose();
+    }
+  }
+
+  Future<ui.Image> _decodeImageFromPixels(
+    Uint8List pixels, {
+    required int width,
+    required int height,
+  }) {
+    final completer = Completer<ui.Image>();
+    ui.decodeImageFromPixels(
+      pixels,
+      width,
+      height,
+      ui.PixelFormat.rgba8888,
+      completer.complete,
+    );
+    return completer.future;
+  }
+
+  (int, int, int) _infernoColor(double value) {
+    const palette = <(double, int, int, int)>[
+      (0.0, 0, 0, 4),
+      (0.13, 31, 12, 72),
+      (0.25, 85, 15, 109),
+      (0.38, 136, 34, 106),
+      (0.5, 186, 54, 85),
+      (0.63, 227, 89, 51),
+      (0.75, 249, 140, 10),
+      (0.88, 252, 195, 65),
+      (1.0, 252, 255, 164),
+    ];
+
+    for (var index = 1; index < palette.length; index += 1) {
+      final lower = palette[index - 1];
+      final upper = palette[index];
+      if (value <= upper.$1) {
+        final span = upper.$1 - lower.$1;
+        final t = span == 0 ? 0.0 : (value - lower.$1) / span;
+        return (
+          _lerpChannel(lower.$2, upper.$2, t),
+          _lerpChannel(lower.$3, upper.$3, t),
+          _lerpChannel(lower.$4, upper.$4, t),
+        );
+      }
+    }
+    final last = palette.last;
+    return (last.$2, last.$3, last.$4);
+  }
+
+  int _lerpChannel(int a, int b, double t) =>
+      (a + ((b - a) * t)).round().clamp(0, 255);
 
   Float32List _prepareInput(
     List<List<double>> melSpectrogram, {

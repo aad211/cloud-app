@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_app/features/analysis/data/audio_playback_service.dart';
 import 'package:cloud_app/features/analysis/data/audio_capture_service.dart';
 import 'package:cloud_app/features/analysis/data/cough_analysis_service.dart';
 import 'package:cloud_app/features/analysis/domain/recorded_cough.dart';
@@ -10,13 +11,23 @@ import 'package:cloud_app/features/analysis/presentation/latest_analysis_provide
 
 enum AnalysisButtonState { idle, loading, success }
 
+enum DebugInferenceStatus { idle, loading, success, error }
+
 class CheckSymptomsState {
+  static const _noChange = Object();
+
   const CheckSymptomsState({
     this.isRecording = false,
     this.recordingTime = 0,
     this.hasRecording = false,
     this.errorMessage = '',
     this.buttonState = AnalysisButtonState.idle,
+    this.isDebugPanelOpen = false,
+    this.debugStatus = DebugInferenceStatus.idle,
+    this.debugLogs = const [],
+    this.debugErrorMessage = '',
+    this.isDebugPlaybackActive = false,
+    this.debugResult,
   });
 
   final bool isRecording;
@@ -24,6 +35,12 @@ class CheckSymptomsState {
   final bool hasRecording;
   final String errorMessage;
   final AnalysisButtonState buttonState;
+  final bool isDebugPanelOpen;
+  final DebugInferenceStatus debugStatus;
+  final List<String> debugLogs;
+  final String debugErrorMessage;
+  final bool isDebugPlaybackActive;
+  final DebugAnalysisResult? debugResult;
 
   CheckSymptomsState copyWith({
     bool? isRecording,
@@ -31,6 +48,12 @@ class CheckSymptomsState {
     bool? hasRecording,
     String? errorMessage,
     AnalysisButtonState? buttonState,
+    bool? isDebugPanelOpen,
+    DebugInferenceStatus? debugStatus,
+    List<String>? debugLogs,
+    String? debugErrorMessage,
+    bool? isDebugPlaybackActive,
+    Object? debugResult = _noChange,
   }) {
     return CheckSymptomsState(
       isRecording: isRecording ?? this.isRecording,
@@ -38,6 +61,16 @@ class CheckSymptomsState {
       hasRecording: hasRecording ?? this.hasRecording,
       errorMessage: errorMessage ?? this.errorMessage,
       buttonState: buttonState ?? this.buttonState,
+      isDebugPanelOpen: isDebugPanelOpen ?? this.isDebugPanelOpen,
+      debugStatus: debugStatus ?? this.debugStatus,
+      debugLogs: debugLogs ?? this.debugLogs,
+      debugErrorMessage: debugErrorMessage ?? this.debugErrorMessage,
+      isDebugPlaybackActive:
+          isDebugPlaybackActive ?? this.isDebugPlaybackActive,
+      debugResult:
+          identical(debugResult, _noChange)
+              ? this.debugResult
+              : debugResult as DebugAnalysisResult?,
     );
   }
 }
@@ -54,7 +87,8 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
       'Analysis setup is incomplete. Add the real model and labels before running analysis.';
   static const _invalidRecordingInputError =
       'Recorded cough audio is invalid. Please try recording again.';
-  static const _analysisFailedError = 'Failed to analyze cough. Please try again.';
+  static const _analysisFailedError =
+      'Failed to analyze cough. Please try again.';
 
   final Ref ref;
   Timer? _recordingTimer;
@@ -83,6 +117,11 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
           recordingTime: 0,
           hasRecording: false,
           errorMessage: _permissionDeniedError,
+          debugResult: null,
+          debugLogs: const [],
+          debugErrorMessage: '',
+          debugStatus: DebugInferenceStatus.idle,
+          isDebugPlaybackActive: false,
         );
       }
       return;
@@ -104,6 +143,11 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
         recordingTime: 0,
         hasRecording: false,
         errorMessage: _recordingFailedError,
+        debugResult: null,
+        debugLogs: const [],
+        debugErrorMessage: '',
+        debugStatus: DebugInferenceStatus.idle,
+        isDebugPlaybackActive: false,
       );
       return;
     }
@@ -114,6 +158,11 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
       recordingTime: 0,
       hasRecording: false,
       errorMessage: '',
+      debugResult: null,
+      debugLogs: const [],
+      debugErrorMessage: '',
+      debugStatus: DebugInferenceStatus.idle,
+      isDebugPlaybackActive: false,
     );
 
     _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
@@ -136,10 +185,131 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
     unawaited(toggleRecording());
   }
 
+  void toggleDebugPanel() {
+    if (!kDebugMode) {
+      return;
+    }
+    state = state.copyWith(isDebugPanelOpen: !state.isDebugPanelOpen);
+  }
+
+  Future<void> runDebugInference() async {
+    if (!kDebugMode || state.isRecording) {
+      return;
+    }
+    final recordedCough = _recordedCough;
+    if (!state.hasRecording || recordedCough == null) {
+      state = state.copyWith(
+        debugStatus: DebugInferenceStatus.error,
+        debugErrorMessage: _missingRecordingError,
+        debugLogs: const ['Record cough first before running debug inference.'],
+      );
+      return;
+    }
+
+    state = state.copyWith(
+      debugStatus: DebugInferenceStatus.loading,
+      debugErrorMessage: '',
+      debugLogs: const ['Starting debug inference...'],
+    );
+
+    try {
+      final debugResult = await ref
+          .read(coughAnalysisServiceProvider)
+          .buildDebugAnalysis(recordedCough);
+      final topIndex =
+          debugResult.rawScores.indexed.reduce((best, current) {
+            return current.$2 > best.$2 ? current : best;
+          }).$1;
+      final topLabel = debugResult.labels[topIndex];
+      final topScore = debugResult.rawScores[topIndex];
+
+      final logs = <String>[
+        ...state.debugLogs,
+        'Decoded ${debugResult.wavSampleCount} WAV samples',
+        'Mel shape: ${debugResult.melSpectrogram.length} x '
+            '${debugResult.melSpectrogram.isEmpty ? 0 : debugResult.melSpectrogram.first.length}',
+        'Model shape: ${debugResult.modelHeight} x ${debugResult.modelWidth} x ${debugResult.modelChannels}',
+        for (final entry in debugResult.stageDurationsMs.entries)
+          '${entry.key}: ${entry.value} ms',
+        'Top prediction: $topLabel (${(topScore * 100).toStringAsFixed(2)}%)',
+      ];
+
+      state = state.copyWith(
+        debugStatus: DebugInferenceStatus.success,
+        debugResult: debugResult,
+        debugLogs: logs,
+        debugErrorMessage: '',
+      );
+    } catch (error, stackTrace) {
+      _reportControllerError(
+        error: error,
+        stackTrace: stackTrace,
+        context: 'Failed to run debug inference.',
+      );
+      state = state.copyWith(
+        debugStatus: DebugInferenceStatus.error,
+        debugErrorMessage: error.toString(),
+        debugLogs: [...state.debugLogs, 'Debug inference failed.'],
+      );
+    }
+  }
+
+  Future<void> playLatestRecording() async {
+    await toggleDebugPlayback();
+  }
+
+  Future<void> toggleDebugPlayback() async {
+    if (!kDebugMode) {
+      return;
+    }
+    final recordedCough = _recordedCough;
+    if (!state.hasRecording || recordedCough == null) {
+      state = state.copyWith(
+        debugStatus: DebugInferenceStatus.error,
+        debugErrorMessage: _missingRecordingError,
+        debugLogs: const ['Record cough first before playback.'],
+        isDebugPlaybackActive: false,
+      );
+      return;
+    }
+    try {
+      final playback = ref.read(audioPlaybackServiceProvider);
+      if (state.isDebugPlaybackActive) {
+        await playback.pause();
+        state = state.copyWith(
+          debugLogs: [...state.debugLogs, 'Playback paused.'],
+          isDebugPlaybackActive: false,
+        );
+        return;
+      }
+      await playback.play(recordedCough);
+      state = state.copyWith(
+        debugLogs: [
+          ...state.debugLogs,
+          'Playback started for latest recording.',
+        ],
+        isDebugPlaybackActive: true,
+      );
+    } catch (error, stackTrace) {
+      _reportControllerError(
+        error: error,
+        stackTrace: stackTrace,
+        context: 'Failed to play recorded cough.',
+      );
+      state = state.copyWith(
+        debugStatus: DebugInferenceStatus.error,
+        debugErrorMessage: 'Playback failed: $error',
+        debugLogs: [...state.debugLogs, 'Playback failed.'],
+        isDebugPlaybackActive: false,
+      );
+    }
+  }
+
   Future<bool> analyze() async {
     if (state.isRecording || state.buttonState != AnalysisButtonState.idle) {
       return false;
     }
+
     final recordedCough = _recordedCough;
     if (!state.hasRecording || recordedCough == null) {
       _showMissingRecordingError();
@@ -196,6 +366,11 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
         hasRecording: recordedCough != null,
         errorMessage:
             recordedCough == null ? _recordingFailedError : state.errorMessage,
+        debugResult: null,
+        debugLogs: const [],
+        debugErrorMessage: '',
+        debugStatus: DebugInferenceStatus.idle,
+        isDebugPlaybackActive: false,
       );
     } catch (e, st) {
       _reportControllerError(
@@ -212,6 +387,11 @@ class CheckSymptomsController extends StateNotifier<CheckSymptomsState> {
         recordingTime: 0,
         hasRecording: false,
         errorMessage: _recordingFailedError,
+        debugResult: null,
+        debugLogs: const [],
+        debugErrorMessage: '',
+        debugStatus: DebugInferenceStatus.idle,
+        isDebugPlaybackActive: false,
       );
     }
   }

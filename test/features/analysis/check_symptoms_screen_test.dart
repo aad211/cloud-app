@@ -10,8 +10,10 @@ import 'package:cloud_app/core/models/condition_probability.dart';
 import 'package:cloud_app/core/storage/local_storage_service.dart';
 import 'package:cloud_app/features/analysis/data/analysis_inference_backend.dart';
 import 'package:cloud_app/features/analysis/data/audio_capture_service.dart';
+import 'package:cloud_app/features/analysis/data/audio_playback_service.dart';
 import 'package:cloud_app/features/analysis/data/cough_analysis_service.dart';
 import 'package:cloud_app/features/analysis/data/spectrogram_export_service.dart';
+import 'package:cloud_app/features/analysis/domain/recorded_cough.dart';
 import 'package:cloud_app/features/analysis/presentation/check_symptoms_screen.dart';
 import 'package:cloud_app/features/result/presentation/result_screen.dart';
 
@@ -21,6 +23,7 @@ Widget _buildCheckSymptomsHarness(
   FakeLocalStorageService storage, {
   String initialLocation = '/check-symptoms',
   AudioCaptureService? audioCaptureService,
+  AudioPlaybackService? audioPlaybackService,
   CoughAnalysisService? coughAnalysisService,
 }) {
   final router = GoRouter(
@@ -48,6 +51,9 @@ Widget _buildCheckSymptomsHarness(
       localStorageServiceProvider.overrideWithValue(storage),
       audioCaptureServiceProvider.overrideWithValue(
         audioCaptureService ?? _buildAudioCaptureService(),
+      ),
+      audioPlaybackServiceProvider.overrideWithValue(
+        audioPlaybackService ?? _FakeAudioPlaybackService(),
       ),
       coughAnalysisServiceProvider.overrideWithValue(
         coughAnalysisService ?? _buildAnalysisService(),
@@ -524,6 +530,55 @@ void main() {
     final popScope = tester.widget<PopScope>(find.byType(PopScope));
     expect(popScope.canPop, isTrue);
   });
+
+  testWidgets('shows debug toggle and panel with debug actions', (
+    tester,
+  ) async {
+    final storage = FakeLocalStorageService();
+    _setPhoneViewport(tester);
+
+    await tester.pumpWidget(_buildCheckSymptomsHarness(storage));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Show Debug'), findsOneWidget);
+    await tester.tap(find.text('Show Debug'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Debug Inference'), findsOneWidget);
+    expect(find.text('Play Recording'), findsOneWidget);
+    expect(find.text('Run Debug Inference'), findsOneWidget);
+  });
+
+  testWidgets('debug playback button toggles play and pause labels', (
+    tester,
+  ) async {
+    final storage = FakeLocalStorageService();
+    _setPhoneViewport(tester);
+    final playback = _FakeAudioPlaybackService();
+
+    await tester.pumpWidget(
+      _buildCheckSymptomsHarness(storage, audioPlaybackService: playback),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(_recordButton());
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 11));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Show Debug'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Play Recording'));
+    await tester.pumpAndSettle();
+    expect(find.text('Pause Playback'), findsOneWidget);
+    expect(playback.playCalls, 1);
+
+    await tester.tap(find.text('Pause Playback'));
+    await tester.pumpAndSettle();
+    expect(find.text('Play Recording'), findsOneWidget);
+    expect(playback.pauseCalls, 1);
+  });
 }
 
 AudioCaptureService _buildAudioCaptureService({
@@ -636,4 +691,22 @@ class _FakeAnalysisInferenceBackend implements AnalysisInferenceBackend {
       channels: channels,
     );
   }
+}
+
+class _FakeAudioPlaybackService implements AudioPlaybackService {
+  int playCalls = 0;
+  int pauseCalls = 0;
+
+  @override
+  Future<void> play(RecordedCough cough) async {
+    playCalls += 1;
+  }
+
+  @override
+  Future<void> pause() async {
+    pauseCalls += 1;
+  }
+
+  @override
+  Future<void> stop() async {}
 }

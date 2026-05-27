@@ -159,49 +159,113 @@ void main() {
     );
   });
 
-  test('analyze rejects recordings that do not decode into WAV samples', () async {
-    final service = CoughAnalysisService(
-      backend: _FakeAnalysisInferenceBackend(
-        onInfer: ({
-          required input,
-          required height,
-          required width,
-          required channels,
+  test(
+    'analyze rejects recordings that do not decode into WAV samples',
+    () async {
+      final service = CoughAnalysisService(
+        backend: _FakeAnalysisInferenceBackend(
+          onInfer: ({
+            required input,
+            required height,
+            required width,
+            required channels,
+          }) async {
+            fail('infer should not run when WAV decoding fails');
+          },
+        ),
+        loadLabels: () async => const ['Healthy'],
+        exportSpectrogram: ({
+          required analysisId,
+          required melSpectrogram,
         }) async {
-          fail('infer should not run when WAV decoding fails');
+          fail('spectrogram export should not run when WAV decoding fails');
         },
-      ),
-      loadLabels: () async => const ['Healthy'],
-      exportSpectrogram: ({
-        required analysisId,
-        required melSpectrogram,
-      }) async {
-        fail('spectrogram export should not run when WAV decoding fails');
-      },
-      generateId: () => 'analysis-invalid-wav',
-      now: () => DateTime.utc(2025, 1, 1),
-      inputHeight: 1,
-      inputWidth: 1,
-      inputChannels: 1,
-    );
+        generateId: () => 'analysis-invalid-wav',
+        now: () => DateTime.utc(2025, 1, 1),
+        inputHeight: 1,
+        inputWidth: 1,
+        inputChannels: 1,
+      );
 
-    await expectLater(
-      () => service.analyze(
-        RecordedCough(
-          reference: 'blob:http://localhost/invalid',
-          wavBytes: Uint8List.fromList(const [0, 1, 2, 3]),
-          backend: RecordedCoughBackend.webBlob,
+      await expectLater(
+        () => service.analyze(
+          RecordedCough(
+            reference: 'blob:http://localhost/invalid',
+            wavBytes: Uint8List.fromList(const [0, 1, 2, 3]),
+            backend: RecordedCoughBackend.webBlob,
+          ),
         ),
-      ),
-      throwsA(
-        isA<StateError>().having(
-          (error) => error.message,
-          'message',
-          'Recorded cough audio did not contain valid 16-bit PCM WAV samples.',
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            'Recorded cough audio did not contain valid 16-bit PCM WAV samples.',
+          ),
         ),
-      ),
-    );
-  });
+      );
+    },
+  );
+
+  test(
+    'buildDebugAnalysis exposes preprocessing and inference details',
+    () async {
+      final service = CoughAnalysisService(
+        backend: _FakeAnalysisInferenceBackend(
+          onInfer: ({
+            required input,
+            required height,
+            required width,
+            required channels,
+          }) async {
+            expect(height, 128);
+            expect(width, 128);
+            expect(channels, 1);
+            return const [0.6, 0.4];
+          },
+        ),
+        loadLabels: () async => const ['Healthy', 'Bronchitis'],
+        readWavSamples: (_) => const [0.0, 0.25, -0.25, 0.5],
+        computeMelSpectrogram:
+            (_) => const [
+              [1.0, 2.0],
+              [3.0, 4.0],
+            ],
+        exportSpectrogram: ({
+          required analysisId,
+          required melSpectrogram,
+        }) async {
+          return const SpectrogramExportResult(
+            spectrogramFilePath: 'spectrogram.png',
+            storageBackend: 'native',
+          );
+        },
+      );
+
+      final result = await service.buildDebugAnalysis(_recordedCough());
+
+      expect(result.modelHeight, 128);
+      expect(result.modelWidth, 128);
+      expect(result.modelChannels, 1);
+      expect(result.wavSampleCount, 4);
+      expect(result.melSpectrogram, isNotEmpty);
+      expect(result.preparedInput, hasLength(128 * 128));
+      expect(result.labels, const ['Healthy', 'Bronchitis']);
+      expect(result.rawScores, const [0.6, 0.4]);
+      expect(result.melPreviewPngBytes, isNotEmpty);
+      expect(result.preparedInputPreviewPngBytes, isNotEmpty);
+      expect(
+        result.stageDurationsMs.keys,
+        containsAll(<String>[
+          'Load labels',
+          'Decode WAV',
+          'Read model shape',
+          'Compute mel spectrogram',
+          'Prepare model input',
+          'Run inference',
+        ]),
+      );
+    },
+  );
 }
 
 class _FakeAnalysisInferenceBackend implements AnalysisInferenceBackend {
