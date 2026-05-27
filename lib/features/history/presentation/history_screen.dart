@@ -72,9 +72,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   Widget build(BuildContext context) {
     final historyAsync = ref.watch(analysisHistoryProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -143,6 +145,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 }

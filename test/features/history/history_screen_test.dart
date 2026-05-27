@@ -527,4 +527,18 @@ void main() {
     // Should navigate to result screen with recordId
     expect(find.text('Result: tap-test-123'), findsOneWidget);
   });
+
+  testWidgets('allows normal back navigation with canPop: true',
+      (tester) async {
+    await tester.pumpWidget(
+      _buildHistory(storage: FakeLocalStorageService()),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Symptom History'), findsOneWidget);
+
+    // Verify PopScope is configured with canPop: true
+    final popScope = tester.widget<PopScope>(find.byType(PopScope));
+    expect(popScope.canPop, isTrue);
+  });
 }
