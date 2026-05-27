@@ -3,11 +3,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_app/features/articles/presentation/articles_screen.dart';
 
-Widget _buildHarness() {
+Widget _buildHarness({
+  Future<bool> Function(BuildContext context, String url)? openLink,
+}) {
   final router = GoRouter(
     initialLocation: '/articles',
     routes: [
-      GoRoute(path: '/articles', builder: (_, __) => const ArticlesScreen()),
+      GoRoute(
+        path: '/articles',
+        builder: (_, __) => ArticlesScreen(openLink: openLink ?? _noopOpenLink),
+      ),
       GoRoute(
         path: '/home',
         builder:
@@ -19,6 +24,8 @@ Widget _buildHarness() {
 
   return MaterialApp.router(routerConfig: router);
 }
+
+Future<bool> _noopOpenLink(BuildContext _, String __) async => true;
 
 void main() {
   testWidgets('renders parity header and routes home from back button', (
@@ -93,6 +100,54 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('World No Tobacco Day Campaign Launched'), findsOneWidget);
+  });
+
+  testWidgets('article Read more opens article URL', (tester) async {
+    String? openedUrl;
+
+    await tester.pumpWidget(
+      _buildHarness(
+        openLink: (context, url) async {
+          openedUrl = url;
+          return true;
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.text('Educational Articles'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    await tester.tap(find.text('Read more').first);
+    await tester.pumpAndSettle();
+
+    expect(openedUrl, isNotNull);
+    expect(openedUrl, startsWith('https://'));
+  });
+
+  testWidgets('news Read more opens news URL', (tester) async {
+    String? openedUrl;
+
+    await tester.pumpWidget(
+      _buildHarness(
+        openLink: (context, url) async {
+          openedUrl = url;
+          return true;
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('News'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Read more').first);
+    await tester.pumpAndSettle();
+
+    expect(openedUrl, isNotNull);
+    expect(openedUrl, startsWith('https://'));
   });
 
   testWidgets('has PopScope with canPop: true for normal navigation',

@@ -3,13 +3,22 @@ import 'package:go_router/go_router.dart';
 import 'package:cloud_app/app/theme/app_colors.dart';
 import 'package:cloud_app/core/models/article_record.dart';
 import 'package:cloud_app/core/models/news_record.dart';
+import 'package:cloud_app/core/utils/external_link_opener.dart';
 import 'package:cloud_app/core/widgets/parity_cards.dart';
 import 'package:cloud_app/core/widgets/parity_page_header.dart';
 import 'package:cloud_app/features/articles/data/articles_seed.dart';
 import 'package:cloud_app/features/articles/data/news_seed.dart';
 
+typedef OpenLinkHandler = Future<bool> Function(BuildContext context, String url);
+
 class ArticlesScreen extends StatefulWidget {
-  const ArticlesScreen({super.key});
+  const ArticlesScreen({super.key, this.openLink = _defaultOpenLink});
+
+  final OpenLinkHandler openLink;
+
+  static Future<bool> _defaultOpenLink(BuildContext context, String url) {
+    return openExternalLink(context: context, url: url);
+  }
 
   @override
   State<ArticlesScreen> createState() => _ArticlesScreenState();
@@ -65,7 +74,10 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                child: tab == 0 ? const _ArticlesTab() : const _NewsTab(),
+                child:
+                    tab == 0
+                        ? _ArticlesTab(openLink: widget.openLink)
+                        : _NewsTab(openLink: widget.openLink),
               ),
             ),
           ],
@@ -113,7 +125,9 @@ class _SegmentButton extends StatelessWidget {
 }
 
 class _ArticlesTab extends StatelessWidget {
-  const _ArticlesTab();
+  const _ArticlesTab({required this.openLink});
+
+  final OpenLinkHandler openLink;
 
   @override
   Widget build(BuildContext context) {
@@ -149,17 +163,24 @@ class _ArticlesTab extends StatelessWidget {
           (
             'Understanding Lung Health',
             'Learn how to maintain healthy lungs and prevent respiratory diseases.',
+            'https://www.nhlbi.nih.gov/health/lungs',
           ),
           (
             'Air Quality & Your Lungs',
             'How pollution affects respiratory health and what you can do.',
+            'https://www.epa.gov/indoor-air-quality-iaq/inside-story-guide-indoor-air-quality',
           ),
           (
             'Quitting Smoking Guide',
             'Evidence-based strategies to quit smoking and improve lung function.',
+            'https://www.cdc.gov/tobacco/quit_smoking/index.htm',
           ),
         ]) ...[
-          _EducationalArticleCard(title: card.$1, description: card.$2),
+          _EducationalArticleCard(
+            title: card.$1,
+            description: card.$2,
+            onReadMore: () => openLink(context, card.$3),
+          ),
           const SizedBox(height: 12),
         ],
       ],
@@ -280,10 +301,12 @@ class _EducationalArticleCard extends StatelessWidget {
   const _EducationalArticleCard({
     required this.title,
     required this.description,
+    required this.onReadMore,
   });
 
   final String title;
   final String description;
+  final VoidCallback onReadMore;
 
   @override
   Widget build(BuildContext context) {
@@ -317,7 +340,7 @@ class _EducationalArticleCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           FilledButton(
-            onPressed: () {},
+            onPressed: onReadMore,
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFE0F2FE),
               foregroundColor: AppColors.navy,
@@ -337,7 +360,9 @@ class _EducationalArticleCard extends StatelessWidget {
 }
 
 class _NewsTab extends StatelessWidget {
-  const _NewsTab();
+  const _NewsTab({required this.openLink});
+
+  final OpenLinkHandler openLink;
 
   @override
   Widget build(BuildContext context) {
@@ -354,7 +379,7 @@ class _NewsTab extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         for (final news in newsSeed) ...[
-          _NewsCard(news: news),
+          _NewsCard(news: news, onReadMore: () => openLink(context, news.url)),
           const SizedBox(height: 12),
         ],
       ],
@@ -363,9 +388,10 @@ class _NewsTab extends StatelessWidget {
 }
 
 class _NewsCard extends StatelessWidget {
-  const _NewsCard({required this.news});
+  const _NewsCard({required this.news, required this.onReadMore});
 
   final NewsRecord news;
+  final VoidCallback onReadMore;
 
   @override
   Widget build(BuildContext context) {
@@ -445,7 +471,7 @@ class _NewsCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 FilledButton(
-                  onPressed: () {},
+                  onPressed: onReadMore,
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.navy,
                     foregroundColor: Colors.white,
