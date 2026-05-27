@@ -4,9 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_app/app/theme/app_colors.dart';
 import 'package:cloud_app/core/models/hospital_record.dart';
-import 'package:cloud_app/core/widgets/parity_cards.dart';
 import 'package:cloud_app/core/widgets/parity_page_header.dart';
-import 'package:cloud_app/features/hospitals/data/location_service.dart';
 import 'package:cloud_app/features/hospitals/presentation/hospitals_controller.dart';
 
 class HospitalsScreen extends ConsumerStatefulWidget {
@@ -55,93 +53,71 @@ class _HospitalsScreenState extends ConsumerState<HospitalsScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: _LiveHospitalMapCard(
-                    location: state.location,
-                    hospitals: hospitals,
-                    status: state.status,
-                    errorMessage: state.errorMessage,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.danger,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.location_on_outlined,
+                              color: AppColors.blue,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              state.location == null
+                                  ? 'Finding your location...'
+                                  : '${state.location!.latitude.toStringAsFixed(3)}, ${state.location!.longitude.toStringAsFixed(3)}',
+                              style: const TextStyle(
+                                color: AppColors.navy,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('🚨', style: TextStyle(fontSize: 24)),
-                          SizedBox(width: 10),
-                          Text(
-                            'Emergency Call',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
+                      const SizedBox(height: 16),
+                      TextField(
+                        onChanged: notifier.updateSearchQuery,
+                        decoration: InputDecoration(
+                          hintText: 'Search hospital...',
+                          hintStyle: const TextStyle(color: AppColors.blue),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: AppColors.blue,
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFFF3F4F6),
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 14),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: AppColors.sand,
+                              width: 2,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: TextField(
-                    onChanged: notifier.updateSearchQuery,
-                    decoration: InputDecoration(
-                      hintText: 'Search hospital...',
-                      hintStyle: const TextStyle(color: AppColors.blue),
-                      prefixIcon: const Icon(
-                        Icons.search,
-                        color: AppColors.blue,
-                      ),
-                      filled: true,
-                      fillColor: const Color(0xFFF3F4F6),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                          color: AppColors.sand,
-                          width: 2,
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: AppColors.blue,
+                              width: 2,
+                            ),
+                          ),
                         ),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                          color: AppColors.blue,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24),
-                  child: ParityInfoCard(
-                    backgroundColor: AppColors.disclaimerBackground,
-                    leading: Icon(
-                      Icons.info_outline,
-                      color: AppColors.warning,
-                      size: 20,
-                    ),
-                    child: Text(
-                      'Based on your symptoms, we recommend visiting a hospital for professional evaluation.',
-                      style: TextStyle(color: AppColors.warning, fontSize: 14),
-                    ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -158,10 +134,8 @@ class _HospitalsScreenState extends ConsumerState<HospitalsScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      if (state.status ==
-                              NearbyHospitalsStatus.loadingLocation ||
-                          state.status ==
-                              NearbyHospitalsStatus.loadingHospitals)
+                      if (state.status == NearbyHospitalsStatus.loadingLocation ||
+                          state.status == NearbyHospitalsStatus.loadingHospitals)
                         const SizedBox(
                           height: 16,
                           width: 16,
@@ -235,193 +209,6 @@ class _HospitalsScreenState extends ConsumerState<HospitalsScreen> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _LiveHospitalMapCard extends StatelessWidget {
-  const _LiveHospitalMapCard({
-    required this.location,
-    required this.hospitals,
-    required this.status,
-    required this.errorMessage,
-  });
-
-  final GeoPoint? location;
-  final List<HospitalRecord> hospitals;
-  final NearbyHospitalsStatus status;
-  final String errorMessage;
-
-  @override
-  Widget build(BuildContext context) {
-    final pins = hospitals.take(3).toList(growable: false);
-    final statusLabel = switch (status) {
-      NearbyHospitalsStatus.loadingLocation => 'Finding your location...',
-      NearbyHospitalsStatus.loadingHospitals =>
-        'Loading live hospital results...',
-      NearbyHospitalsStatus.error => 'Nearby hospital lookup failed.',
-      NearbyHospitalsStatus.empty =>
-        'No nearby hospitals found for the current location.',
-      NearbyHospitalsStatus.ready => 'Live nearby hospital results',
-    };
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        height: 192,
-        decoration: const BoxDecoration(
-          color: Color(0xFFE0F2FE),
-          boxShadow: [
-            BoxShadow(
-              color: Color(0x1A1A3263),
-              blurRadius: 20,
-              offset: Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            const Positioned.fill(
-              child: CustomPaint(painter: _MapTexturePainter()),
-            ),
-            const Positioned(top: 18, left: 40, child: _HospitalMapPin()),
-            const Positioned(top: 48, right: 36, child: _HospitalMapPin()),
-            const Positioned(bottom: 34, left: 122, child: _HospitalMapPin()),
-            Positioned(
-              top: 64,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const _UserMapPin(),
-                    if (location != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        '${location!.latitude.toStringAsFixed(3)}, ${location!.longitude.toStringAsFixed(3)}',
-                        style: const TextStyle(
-                          color: AppColors.navy,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              left: 12,
-              bottom: 12,
-              child: DecoratedBox(
-                decoration: const BoxDecoration(
-                  color: Color(0xE6FFFFFF),
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  child: Text(
-                    statusLabel,
-                    style: const TextStyle(
-                      color: AppColors.navy,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            if (pins.isNotEmpty)
-              for (var index = 0; index < pins.length; index++)
-                Positioned(
-                  top: 18 + (index * 34),
-                  right: 24 + (index * 10),
-                  child: _HospitalMapPin(label: '${index + 1}'),
-                ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MapTexturePainter extends CustomPainter {
-  const _MapTexturePainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final gridPaint =
-        Paint()
-          ..color = Colors.white.withValues(alpha: 0.28)
-          ..strokeWidth = 1;
-    const gap = 20.0;
-
-    for (double x = 0; x <= size.width; x += gap) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
-    }
-
-    for (double y = 0; y <= size.height; y += gap) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _UserMapPin extends StatelessWidget {
-  const _UserMapPin();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: const BoxDecoration(
-            color: AppColors.navy,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.place, color: Colors.white, size: 22),
-        ),
-        Container(width: 4, height: 12, color: AppColors.navy),
-      ],
-    );
-  }
-}
-
-class _HospitalMapPin extends StatelessWidget {
-  const _HospitalMapPin({this.label});
-
-  final String? label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: const BoxDecoration(
-        color: AppColors.danger,
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
-      child:
-          label == null
-              ? const Icon(Icons.place, color: Colors.white, size: 18)
-              : Text(
-                label!,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
     );
   }
 }
