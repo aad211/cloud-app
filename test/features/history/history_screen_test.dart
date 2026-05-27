@@ -276,6 +276,23 @@ void main() {
       );
     });
 
+    testWidgets('health insights card renders shared seed content',
+        (tester) async {
+      final storage = storageWith([
+        AnalysisRecord(
+          id: 'r1',
+          date: DateTime(2025, 6, 15, 14, 30),
+          condition: 'Asthma',
+          percentage: 87,
+        ),
+      ]);
+
+      await tester.pumpWidget(_buildHistory(storage: storage));
+      await tester.pump();
+
+      expect(find.textContaining('Understanding COPD'), findsOneWidget);
+    });
+
     testWidgets('back button routes home', (tester) async {
       final storage = storageWith([
         AnalysisRecord(

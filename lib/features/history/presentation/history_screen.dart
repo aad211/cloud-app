@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_app/app/theme/app_colors.dart';
+import 'package:cloud_app/core/data/health_insights_seed.dart';
 import 'package:cloud_app/core/models/analysis_record.dart';
 import 'package:cloud_app/core/widgets/condition_visuals.dart';
 import 'package:cloud_app/core/widgets/parity_cards.dart';
@@ -388,6 +389,8 @@ class _InsightsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tips = healthInsightsSeed.take(2).toList();
+
     return ParityInfoCard(
       leading: const SizedBox.shrink(),
       child: Column(
@@ -406,16 +409,13 @@ class _InsightsCard extends StatelessWidget {
             "• You've completed $recordCount ${recordCount == 1 ? 'analysis' : 'analyses'}",
             style: const TextStyle(color: AppColors.blue, fontSize: 14),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            '• Regular monitoring helps track respiratory health changes',
-            style: TextStyle(color: AppColors.blue, fontSize: 14),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            '• Consult a healthcare professional if symptoms persist',
-            style: TextStyle(color: AppColors.blue, fontSize: 14),
-          ),
+          for (final tip in tips) ...[
+            const SizedBox(height: 8),
+            Text(
+              '• ${tip.title}: ${tip.description}',
+              style: const TextStyle(color: AppColors.blue, fontSize: 14),
+            ),
+          ],
         ],
       ),
     );
