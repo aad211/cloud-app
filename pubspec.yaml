@@ -20,6 +20,7 @@ dependencies:
   tflite_flutter: ^0.11.0
   web: ^1.1.0
   url_launcher: ^6.3.2
+  flutter_svg: ^2.2.1
 
 dev_dependencies:
   flutter_test:
@@ -31,3 +32,4 @@ flutter:
   assets:
     - assets/models/cloud.tflite
     - assets/labels.txt
+    - assets/images/cloud_logo_icon.svg

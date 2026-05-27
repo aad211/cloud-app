@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cloud_app/app/theme/app_colors.dart';
 import 'package:cloud_app/features/onboarding/presentation/splash_screen.dart';
-import 'package:cloud_app/core/widgets/cloud_logo.dart';
 
 import '../../test_helpers/fake_local_storage_service.dart';
 import 'package:cloud_app/core/storage/local_storage_service.dart';
@@ -23,7 +23,7 @@ void main() {
   ) async {
     await tester.pumpWidget(_buildSplash());
 
-    expect(find.byIcon(Icons.cloud), findsOneWidget);
+    expect(find.byType(SvgPicture), findsOneWidget);
     expect(find.text('CLOUD'), findsOneWidget);
     expect(find.text('Cough Lung Observation\n& Diagnosis'), findsOneWidget);
 
@@ -57,15 +57,25 @@ void main() {
     );
   });
 
-  testWidgets('displays CloudLogo with large size and white colors',
-      (tester) async {
+  testWidgets('uses direct SVG branding without CloudLogo wrapper', (
+    tester,
+  ) async {
     await tester.pumpWidget(_buildSplash());
 
-    expect(find.byType(CloudLogo), findsOneWidget);
-    
-    final logo = tester.widget<CloudLogo>(find.byType(CloudLogo));
-    expect(logo.size, CloudLogoSize.large);
-    expect(logo.iconColor, Colors.white);
-    expect(logo.textColor, Colors.white);
+    final svgFinder = find.byType(SvgPicture);
+    expect(svgFinder, findsOneWidget);
+    final logo = tester.widget<SvgPicture>(svgFinder);
+    expect(logo.width, 120);
+    expect(logo.height, 120);
+    expect(
+      logo.colorFilter,
+      const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+    );
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget.runtimeType.toString() == 'CloudLogo',
+      ),
+      findsNothing,
+    );
   });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_app/app/theme/app_colors.dart';
@@ -10,7 +11,6 @@ import 'package:cloud_app/core/models/health_insight_record.dart';
 import 'package:cloud_app/core/utils/external_link_opener.dart';
 import 'package:cloud_app/core/widgets/parity_cards.dart';
 import 'package:cloud_app/features/analysis/presentation/analysis_history_controller.dart';
-import 'package:cloud_app/core/widgets/cloud_logo.dart';
 import 'package:cloud_app/core/widgets/exit_confirmation_dialog.dart';
 
 typedef OpenLinkHandler =
@@ -51,14 +51,36 @@ class HomeScreen extends ConsumerWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const CloudLogo(size: CloudLogoSize.medium),
-                    const SizedBox(width: 12),
+                    SvgPicture.asset(
+                      'assets/images/cloud_logo_icon.svg',
+                      width: 48,
+                      height: 48,
+                      colorFilter: const ColorFilter.mode(
+                        AppColors.navy,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        'Cough Lung Observation & Diagnosis',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.labelSmall?.copyWith(color: AppColors.blue),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'CLOUD',
+                            style: TextStyle(
+                              color: AppColors.navy,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            'Cough Lung Observation & Diagnosis',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(color: AppColors.blue),
+                          ),
+                        ],
                       ),
                     ),
                   ],

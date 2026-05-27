@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_app/core/models/analysis_record.dart';
 import 'package:cloud_app/core/storage/local_storage_service.dart';
 import 'package:cloud_app/features/home/presentation/home_screen.dart';
-import 'package:cloud_app/core/widgets/cloud_logo.dart';
 
 import '../../test_helpers/fake_local_storage_service.dart';
 
@@ -63,19 +63,25 @@ Widget _buildHomeRouter({required FakeLocalStorageService storage}) {
 }
 
 void main() {
-  testWidgets('displays CloudLogo with medium size', (tester) async {
+  testWidgets('renders React-style home branding header', (tester) async {
     final storage = FakeLocalStorageService();
 
     await tester.pumpWidget(_buildHome(storage: storage));
     await tester.pump(); // allow async build() to complete
 
-    expect(find.byType(CloudLogo), findsOneWidget);
-
-    final logo = tester.widget<CloudLogo>(find.byType(CloudLogo));
-    expect(logo.size, CloudLogoSize.medium);
+    expect(find.byType(SvgPicture), findsOneWidget);
+    expect(find.byIcon(Icons.cloud), findsNothing);
+    expect(find.text('CLOUD'), findsOneWidget);
+    expect(find.text('Cough Lung Observation & Diagnosis'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget.runtimeType.toString() == 'CloudLogo',
+      ),
+      findsNothing,
+    );
   });
 
-  testWidgets('renders logo and subtitle in a single header row', (
+  testWidgets('renders icon plus text block in a single header row', (
     tester,
   ) async {
     final storage = FakeLocalStorageService();
@@ -85,16 +91,28 @@ void main() {
 
     final headerRow = find.byWidgetPredicate((widget) {
       if (widget is! Row) return false;
-      final hasLogo = widget.children.any((child) => child is CloudLogo);
-      final hasSubtitle = widget.children.any((child) {
-        final candidate = switch (child) {
-          Text text => text,
-          Expanded(child: final Text text) => text,
+      final hasCloudIcon = widget.children.any((child) => child is SvgPicture);
+      final hasBrandingTextColumn = widget.children.any((child) {
+        final brandingColumn = switch (child) {
+          Column column => column,
+          Expanded(child: final Column column) => column,
           _ => null,
         };
-        return candidate?.data == 'Cough Lung Observation & Diagnosis';
+        if (brandingColumn == null) return false;
+        var hasTitle = false;
+        var hasSubtitle = false;
+        for (final grandchild in brandingColumn.children) {
+          if (grandchild is Text && grandchild.data == 'CLOUD') {
+            hasTitle = true;
+          }
+          if (grandchild is Text &&
+              grandchild.data == 'Cough Lung Observation & Diagnosis') {
+            hasSubtitle = true;
+          }
+        }
+        return hasTitle && hasSubtitle;
       });
-      return hasLogo && hasSubtitle;
+      return hasCloudIcon && hasBrandingTextColumn;
     });
 
     expect(headerRow, findsOneWidget);

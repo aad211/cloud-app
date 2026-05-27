@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_app/app/theme/app_colors.dart';
 import 'package:cloud_app/core/storage/local_storage_service.dart';
-import 'package:cloud_app/core/widgets/cloud_logo.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -68,15 +68,29 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             scale: _scaleAnimation,
             child: Material(
               type: MaterialType.transparency,
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 32, vertical: 36),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CloudLogo(
-                      size: CloudLogoSize.large,
-                      iconColor: Colors.white,
-                      textColor: Colors.white,
+                    SvgPicture.asset(
+                      'assets/images/cloud_logo_icon.svg',
+                      width: 192,
+                      height: 192,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'CLOUD',
+                      style: TextStyle(
+                        fontSize: 56,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2,
+                        color: Colors.white,
+                      ),
                     ),
                     SizedBox(height: 12),
                     Text(
