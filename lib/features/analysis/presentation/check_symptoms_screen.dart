@@ -46,6 +46,7 @@ class CheckSymptomsScreen extends ConsumerWidget {
         backgroundColor: Colors.white,
         body: SafeArea(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ParityPageHeader(
                 title: 'Check Symptoms',
