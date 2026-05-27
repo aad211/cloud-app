@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:cloud_app/core/models/analysis_record.dart';
 import 'package:cloud_app/core/storage/local_storage_service.dart';
 import 'package:cloud_app/features/home/presentation/home_screen.dart';
+import 'package:cloud_app/core/widgets/cloud_logo.dart';
 
 import '../../test_helpers/fake_local_storage_service.dart';
 
@@ -57,6 +58,18 @@ Widget _buildHomeRouter({required FakeLocalStorageService storage}) {
 }
 
 void main() {
+  testWidgets('displays CloudLogo with medium size', (tester) async {
+    final storage = FakeLocalStorageService();
+
+    await tester.pumpWidget(_buildHome(storage: storage));
+    await tester.pump(); // allow async build() to complete
+
+    expect(find.byType(CloudLogo), findsOneWidget);
+    
+    final logo = tester.widget<CloudLogo>(find.byType(CloudLogo));
+    expect(logo.size, CloudLogoSize.medium);
+  });
+
   group('HomeScreen – empty history', () {
     testWidgets('shows empty-state card with no-analysis copy', (tester) async {
       final storage = FakeLocalStorageService();

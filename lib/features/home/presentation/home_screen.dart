@@ -6,6 +6,7 @@ import 'package:cloud_app/app/theme/app_colors.dart';
 import 'package:cloud_app/core/models/analysis_record.dart';
 import 'package:cloud_app/core/widgets/parity_cards.dart';
 import 'package:cloud_app/features/analysis/presentation/analysis_history_controller.dart';
+import 'package:cloud_app/core/widgets/cloud_logo.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -41,28 +42,22 @@ class HomeScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.cloud, color: AppColors.navy, size: 32),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'CLOUD',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(color: AppColors.navy),
-                        ),
-                        Text(
-                          'Cough Lung Observation & Diagnosis',
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(color: AppColors.blue),
-                        ),
-                      ],
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CloudLogo(size: CloudLogoSize.medium),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Cough Lung Observation & Diagnosis',
+                      style: Theme.of(context)
+                          .textTheme
+                          .labelSmall
+                          ?.copyWith(color: AppColors.blue),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 20),
               historyAsync.when(
