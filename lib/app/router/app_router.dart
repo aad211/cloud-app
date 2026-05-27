@@ -90,7 +90,10 @@ GoRouter buildRouter({
           builder: (context, state) => const CheckSymptomsScreen()),
       GoRoute(
           path: '/result',
-          builder: (context, state) => const ResultScreen()),
+          builder: (context, state) {
+            final recordId = state.uri.queryParameters['recordId'];
+            return ResultScreen(recordId: recordId);
+          }),
       GoRoute(
           path: '/history',
           builder: (context, state) => const HistoryScreen()),
